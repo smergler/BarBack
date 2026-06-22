@@ -209,8 +209,9 @@ Goal: multi-user persistence. **Follow `docs/adr-001-data-isolation.md` — Supa
       _Written. Includes partial unique index for one-open-session-per-user, RLS on all 6 tables, upsert RPCs, idempotent (DROP IF EXISTS on policies/triggers)._
 - [x] **P6.3 Apply the migration** via `supabase db push` (automated via CLI).
       _Linked project jnifjkmnoudeuprpzzge; migration 20260622000000_init.sql applied cleanly._
-- [ ] **P6.4 Auth dependency:** FastAPI `get_current_user` that verifies the Supabase JWT locally against the
+- [x] **P6.4 Auth dependency:** FastAPI `get_current_user` that verifies the Supabase JWT locally against the
       JWT secret and returns `user_id`; 401 on invalid. Unit-test with a signed test token.
+      _backend/auth.py; 7 tests (valid, expired, wrong secret, wrong audience, service_role bypass, missing env var 503, missing sub); 41 tests green._
 - [ ] **P6.5 Data layer via `supabase-py` carrying the user JWT** (NOT asyncpg — per ADR). One thin module.
 - [ ] **P6.6 Inventory endpoints** (GET/POST/PUT/DELETE, soft-delete via `is_active`). Tests: auth required, 404/403.
 - [ ] **P6.7 Companions endpoints** + feedback (implement the verdict→like/dislike rule from the spec). Tests.
