@@ -76,15 +76,15 @@ Goal: a clickable demo. Keep it minimal — no DB, no auth, hardcoded inventory 
 - [ ] **3.7 🧑 Verify the live URL** end-to-end from a browser (human). Then put the URL in
       `README.md` and `RESUME_STORY.md`. Commit.
 
-## Task 4 — README that tells the story  ·  Status: not started
+## Task 4 — README that tells the story  ·  Status: basic README + docs/eval-spec.md written; remaining = security writeup, fuller diagram + metrics table, demo link
 
-- [ ] **4.1 Overview section**: one paragraph — what it is, who it's for, the eval-first angle.
-- [ ] **4.2 Architecture diagram** (mermaid or ASCII): request → pre-filter/context → Claude (structured) → parse → eval.
-- [ ] **4.3 "Eval design" writeup**: the triad — deterministic grounding + makeable (set math) and LLM judge
-      (subjective); why the split. Pull the metrics-timeline table from `RESUME_STORY.md`.
+- [x] **4.1 Overview section**: one paragraph — what it is, who it's for, the eval-first angle. _(done in README.md)_
+- [x] **4.2 Architecture diagram**: ASCII diagram in README. _(upgrade to mermaid optional)_
+- [~] **4.3 "Eval design" writeup**: summarized in README, fully specified in `docs/eval-spec.md`.
+      Remaining: inline the metrics-timeline table from `RESUME_STORY.md` into the README.
 - [ ] **4.4 "Security decision" writeup**: RLS-at-the-DB vs app-enforced `WHERE user_id`; why asyncpg would
       silently bypass RLS. _(Read `docs/adr-001-data-isolation.md` and summarize it — do not invent the rationale.)_
-- [ ] **4.5 Setup/run section**: venv, `pip install -r requirements.txt`, pytest, run_evals (mock + live), run the app.
+- [x] **4.5 Setup/run section**: venv, install, pytest, run_evals (mock + live). _(done in README; add "run the app" after Task 3)_
 - [ ] **4.6 Live demo link** + a screenshot. Commit.
 
 ## Task 5 — CI gate on the evals  ·  Status: not started
@@ -183,10 +183,11 @@ Goal: log every LLM call so cost/latency/quality is inspectable, not guessed.
 
 ### P6 — The real backend (breadth)  ·  Status: not started
 Goal: multi-user persistence. **Follow `docs/adr-001-data-isolation.md` — Supabase client + user JWT, NO asyncpg.**
-- [ ] **P6.0 Write `docs/backend-spec.md`** (replaces the deleted prompts, with their bugs fixed): data model
-      (inventory, companions, sessions, session_drinks), endpoint surface, the **error-body contract** (match
-      FastAPI's `{detail}` or add handlers), pagination (`limit`/`offset` everywhere or nowhere — pick one),
-      the **companion-feedback verdict→like/dislike rule**, and a concrete definition of "current session".
+- [ ] **P6.0 Write `docs/backend-spec.md`** — the authoritative backend spec. Must cover: data model
+      (inventory, companions, sessions, session_drinks), endpoint surface, and explicitly resolve each of these
+      known pitfalls: the **error-body contract** (match FastAPI's `{detail}` or add handlers), **pagination**
+      (`limit`/`offset` everywhere or nowhere — pick one), a **unique key** for upsert/dedup (e.g. `UNIQUE(user_id, name)`),
+      the **companion-feedback verdict→like/dislike rule**, and a concrete definition of **"current session"**.
 - [ ] **P6.1 🧑 Create the Supabase project**; collect URL, anon key, service key, JWT secret (human).
 - [ ] **P6.2 Write `backend/migrations/001_init.sql`** from the spec: tables + `UNIQUE(user_id, name)` where
       needed + RLS policies (`auth.uid() = user_id`) + `updated_at` trigger.
