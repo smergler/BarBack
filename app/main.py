@@ -56,6 +56,15 @@ app.include_router(sessions.router)
 app.include_router(session_drinks.router)
 
 
+@app.get("/config")
+def get_config() -> dict:
+    """Public config for the frontend — safe (anon/public keys only)."""
+    return {
+        "supabase_url": os.environ.get("SUPABASE_PROJECT_URL", ""),
+        "supabase_anon_key": os.environ.get("SUPABASE_ANON_KEY", ""),
+    }
+
+
 @app.exception_handler(RecommendationError)
 async def recommendation_error_handler(request: Request, exc: RecommendationError) -> JSONResponse:
     return JSONResponse(status_code=502, content={"detail": str(exc)})
