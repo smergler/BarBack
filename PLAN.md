@@ -62,7 +62,7 @@ Goal: produce the quality numbers grounding can't (built + unit-tested, never ru
 - [x] **2.4 Record** the judge numbers in `RESUME_STORY.md`; commit.
       _Recorded; name accuracy 58% flagged as next improvement target._
 
-## Task 3 — Deploy a thin vertical slice (live URL)  ·  Status: in progress (pending browser verify)
+## Task 3 — Deploy a thin vertical slice (live URL)  ·  Status: done
 
 Goal: a clickable demo. Keep it minimal — no DB, no auth, hardcoded inventory for v1.
 
@@ -83,11 +83,11 @@ Goal: a clickable demo. Keep it minimal — no DB, no auth, hardcoded inventory 
 - [x] **3.5 Serve static** from FastAPI (`StaticFiles` mounted at `/`). Verify the page works against local API.
       _StaticFiles uses absolute path (Path(__file__).parent/static); rate limiter (20/min global, 10/min /recommend); RecommendationError → 502; input max_length 200 + count 1-10; frontend XSS-safe via txt() escaping + 30s fetch timeout; 34 tests green._
 - [x] **3.6 🧑 Deploy to Railway**: deployed. URL: https://drinksuggesterproject-production.up.railway.app
-- [ ] **3.7 🧑 Verify the live URL** end-to-end from a browser (human). Then put the URL in
+- [x] **3.7 🧑 Verify the live URL** end-to-end from a browser (human). Then put the URL in
       `README.md` and `RESUME_STORY.md`. Commit.
-      _URL recorded in README + RESUME_STORY; pending browser verification._
+      _Verified. Real output: Boulevardier (correctly named, all inventory) + "Negroni" using mezcal/dry vermouth — live demonstration of the 58% name accuracy finding._
 
-## Task 4 — README that tells the story  ·  Status: in progress
+## Task 4 — README that tells the story  ·  Status: done
 
 - [x] **4.1 Overview section**: one paragraph — what it is, who it's for, the eval-first angle. _(done in README.md)_
 - [x] **4.2 Architecture diagram**: ASCII diagram in README. _(upgrade to mermaid optional)_
@@ -97,7 +97,8 @@ Goal: a clickable demo. Keep it minimal — no DB, no auth, hardcoded inventory 
       silently bypass RLS. _(Read `docs/adr-001-data-isolation.md` and summarize it — do not invent the rationale.)_
       _Written from ADR verbatim; interview one-liner included._
 - [x] **4.5 Setup/run section**: venv, install, pytest, run_evals (mock + live). _"Run the app" section added after Task 3._
-- [ ] **4.6 Live demo link** + a screenshot. Commit. _(blocked on 3.6/3.7 human steps)_
+- [x] **4.6 Live demo link** + a screenshot. Commit.
+      _Live demo URL in README + RESUME_STORY. Screenshot: Boulevardier + "Negroni" (mezcal/dry vermouth) — live name accuracy failure._
 
 ## Task 5 — CI gate on the evals  ·  Status: in progress
 

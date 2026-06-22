@@ -139,7 +139,9 @@ business is ever revisited, the Wizard-of-Oz test above is the starting point �
   rate-limited (10/min per IP), input-length capped, XSS-safe frontend. Ready for Railway deploy.
 - [x] **Live eval run** complete. GROUNDING 100%, MAKEABLE 94%, MAKEABLE-NOW 75%.
   JUDGE: constraints 74%, occasion fit 4.6/5, plausibility 4.4/5, **name accuracy 58%** —
-  the model grounds correctly but misnames ~42% of drinks (Boulevardier called a "Negroni" etc).
-  This is the next concrete improvement target.
+  the model grounds correctly but misnames ~42% of drinks. Confirmed in production: "movie night"
+  request returned a Boulevardier (correct) and a "Negroni" made with mezcal + dry vermouth
+  (neither gin nor sweet vermouth — not a Negroni by any definition). Grounding: 100%. Name: wrong.
+  This is the clearest next improvement target and a live demo of exactly why the judge exists.
 - [x] **Railway deploy** complete. Live URL: https://drinksuggesterproject-production.up.railway.app
   (`railway.toml` start command + ANTHROPIC_API_KEY set in Railway dashboard).
