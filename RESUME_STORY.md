@@ -126,10 +126,13 @@ business is ever revisited, the Wizard-of-Oz test above is the starting point �
 - [x] **Adversarial scenarios added** (Negroni/Sazerac/Mai Tai/count=5). Live grounding
   stayed 100% — the model flags rather than fakes. Also fixed a matcher false-positive
   (generic "bitters"/"vermouth"/etc. no longer carry a match alone).
-- [ ] **Add a `makeable rate` metric — now top priority.** Deterministic, complements
-  grounding: an open-ended recommendation must use ≥1 owned bottle (the Mai Tai gamed
-  grounding by being all-`missing`). Grounding = honesty; makeable = usefulness.
-- [ ] **Run the LLM judge live** (constraint adherence, occasion fit, plausibility,
-  name accuracy — would catch "Boulevardier called a Negroni"). Built + unit-tested, never run live.
-- [ ] Wrap the core in a minimal FastAPI + one-screen frontend, deploy (live URL).
-- [ ] README with an architecture diagram + the two "why I decided X" writeups.
+- [x] **Makeable-rate metric** implemented. `uses_inventory` = ≥1 owned bottle anchors the
+  drink; `makeable_now` = uses_inventory AND zero `missing` ingredients. Correctly re-validates
+  inventory claims to catch hallucination (model claiming a bottle you don't own still fails).
+  Mock baseline: MAKEABLE 88%, MAKEABLE-NOW 50% across open-ended scenarios.
+- [x] **FastAPI + single-page frontend** deployed locally. `POST /recommend`, `GET /inventory`,
+  rate-limited (10/min per IP), input-length capped, XSS-safe frontend. Ready for Railway deploy.
+- [ ] **Live eval run** — needs `ANTHROPIC_API_KEY`. Run `evals.run_evals --live --judge` to
+  get grounding + makeable + judge numbers; fill into RESUME_STORY.md and README metrics table.
+- [ ] **Railway deploy** (human steps: `railway login`, `railway up`, set key in dashboard);
+  then live URL goes in README + here.

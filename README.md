@@ -20,13 +20,42 @@ The recommender is graded by a measurement harness, not vibes:
 
 - **Grounding rate** (deterministic) — % of suggestions where every ingredient is owned,
   an allowed staple, or honestly flagged. Set math, not NLP.
-- **Makeable rate** (deterministic, planned) — does the drink actually use owned bottles,
-  or is it a shopping list?
+- **Makeable rate** (deterministic) — does the drink actually use owned bottles, or is
+  it a pure shopping list? (`uses_inventory` = ≥1 owned bottle anchors the drink;
+  `makeable_now` = uses_inventory AND zero `missing` ingredients.)
 - **LLM-as-judge** — the subjective dimensions (constraint adherence, occasion fit,
-  recipe plausibility) deterministic checks can't see.
+  recipe plausibility, name accuracy) deterministic checks can't see.
+
+### Metrics timeline
+
+| Milestone | Grounding | Makeable | Makeable-now | Notes |
+|---|---|---|---|---|
+| Mock baseline (seeded violations) | 53% | 88% | 50% | Proved the scorer catches violations before spending a token. |
+| Live baseline (pending) | — | — | — | Run `.venv/bin/python -m evals.run_evals --live` after setting ANTHROPIC_API_KEY. |
+
+_Live numbers will be filled in here after the first live run._
 
 See [`docs/eval-spec.md`](docs/eval-spec.md) for exact definitions and
-[`RESUME_STORY.md`](RESUME_STORY.md) for the metrics timeline and engineering decisions.
+[`RESUME_STORY.md`](RESUME_STORY.md) for the full narrative and engineering decisions.
+
+## Security decision: DB-enforced RLS, not app-enforced `WHERE user_id`
+
+For the future multi-user backend (see [`docs/adr-001-data-isolation.md`](docs/adr-001-data-isolation.md)):
+
+The initial spec combined Supabase Auth (JWT + RLS policies) with raw `asyncpg` for
+database access. Those two choices are **silently incompatible**: `asyncpg` connects
+directly to Postgres as the service role with no JWT, so `auth.uid()` is never set and
+**RLS is bypassed entirely**. Every policy becomes dead code; a single forgotten
+`WHERE user_id` in application code is a cross-user data leak with no second line of defense.
+
+Decision: **Supabase client (PostgREST) carrying the user's JWT**, so RLS actually fires.
+Defense in depth: both the application *and* the database must fail before data leaks.
+The throughput cost of PostgREST over a direct connection is irrelevant at personal/portfolio scale.
+
+> **Interview one-liner:** "I chose DB-enforced row-level security over app-enforced
+> `WHERE user_id` filtering, because a single forgotten filter in a multi-tenant app is
+> a data breach — and I caught that raw asyncpg would have silently bypassed RLS and
+> made the policies dead code."
 
 ## Architecture (current)
 
@@ -101,9 +130,17 @@ heavy personal use still ~$10/mo.
 for *recommendation quality* (grounding / makeable / judge scores), not token cost. Cost
 would only become a design factor at thousands-of-users scale.
 
+## Run the app
+
+```bash
+.venv/bin/uvicorn app.main:app --reload
+# then open http://localhost:8000
+```
+
 ## Status
 
-Recommender core + grounding eval + LLM judge are implemented and tested (offline and
-live). Live grounding is currently 100% across the scenario set, including adversarial
-named-classics. Next up (`PLAN.md`): a makeable-rate metric, a live judge run, then a
-thin deployable slice. _A live demo link will go here once deployed._
+Recommender core, grounding eval, makeable-rate metric, and LLM judge are implemented
+and tested. A FastAPI + single-page frontend slice is complete and ready to deploy.
+Next up: live eval run (needs `ANTHROPIC_API_KEY`), then Railway deploy.
+
+_A live demo link will go here once deployed._

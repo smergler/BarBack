@@ -84,16 +84,17 @@ Goal: a clickable demo. Keep it minimal — no DB, no auth, hardcoded inventory 
 - [ ] **3.7 🧑 Verify the live URL** end-to-end from a browser (human). Then put the URL in
       `README.md` and `RESUME_STORY.md`. Commit.
 
-## Task 4 — README that tells the story  ·  Status: basic README + docs/eval-spec.md written; remaining = security writeup, fuller diagram + metrics table, demo link
+## Task 4 — README that tells the story  ·  Status: in progress
 
 - [x] **4.1 Overview section**: one paragraph — what it is, who it's for, the eval-first angle. _(done in README.md)_
 - [x] **4.2 Architecture diagram**: ASCII diagram in README. _(upgrade to mermaid optional)_
-- [~] **4.3 "Eval design" writeup**: summarized in README, fully specified in `docs/eval-spec.md`.
-      Remaining: inline the metrics-timeline table from `RESUME_STORY.md` into the README.
-- [ ] **4.4 "Security decision" writeup**: RLS-at-the-DB vs app-enforced `WHERE user_id`; why asyncpg would
+- [x] **4.3 "Eval design" writeup**: summarized in README, fully specified in `docs/eval-spec.md`.
+      _Metrics timeline table inlined into README with mock baseline numbers; makeable definition expanded._
+- [x] **4.4 "Security decision" writeup**: RLS-at-the-DB vs app-enforced `WHERE user_id`; why asyncpg would
       silently bypass RLS. _(Read `docs/adr-001-data-isolation.md` and summarize it — do not invent the rationale.)_
-- [x] **4.5 Setup/run section**: venv, install, pytest, run_evals (mock + live). _(done in README; add "run the app" after Task 3)_
-- [ ] **4.6 Live demo link** + a screenshot. Commit.
+      _Written from ADR verbatim; interview one-liner included._
+- [x] **4.5 Setup/run section**: venv, install, pytest, run_evals (mock + live). _"Run the app" section added after Task 3._
+- [ ] **4.6 Live demo link** + a screenshot. Commit. _(blocked on 3.6/3.7 human steps)_
 
 ## Task 5 — CI gate on the evals  ·  Status: not started
 
