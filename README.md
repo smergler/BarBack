@@ -59,32 +59,43 @@ The throughput cost of PostgREST over a direct connection is irrelevant at perso
 > a data breach — and I caught that wiring up raw asyncpg would have silently bypassed
 > RLS and made the policies dead code."
 
-## Architecture (current)
+## Architecture
 
 ```
-RecommendRequest ─▶ pre-filter / context build ─▶ Claude (structured output)
-                                                        │
-                                                        ▼
-                                         parse + validate (Pydantic)
-                                                        │
-                          ┌─────────────────────────────┼───────────────────────┐
-                          ▼                             ▼                         ▼
-                  grounding scorer            makeable scorer (planned)      LLM judge
-                  (deterministic)              (deterministic)              (subjective)
+Browser ─▶ FastAPI (/recommend, /inventory, /companions, /sessions, /session-drinks)
+                │                   │
+                │         Supabase Auth (JWT verification, offline)
+                │                   │
+                ▼                   ▼
+        recommender/         backend/db.py (supabase-py + user JWT → RLS enforced)
+        (framework-agnostic)         │
+                │                   ▼
+                │              Postgres (Supabase) — bottles, companions, sessions, drinks
+                ▼
+        Claude (structured output) → grounding scorer + LLM judge
 ```
 
 The recommender core (`recommender/`) is framework-agnostic — no web/DB dependencies — so
-it can be developed and evaluated in isolation, then lifted into a backend later.
+it can be evaluated in isolation. The persistence layer carries the user's JWT into every
+Supabase query so Postgres RLS fires, enforcing row-level isolation at the database level.
 
 ## Layout
 
 ```
-recommender/   core: schemas, pantry rules, bottle matcher, LLM client, context, orchestrator
-evals/         fixtures, mock responses, grounding scorer, LLM judge, runner, inspect tool
-tests/         pytest unit tests (scorers, matcher, parser, judge)
-docs/          eval-spec.md, adr-001-data-isolation.md
-PLAN.md        build plan (atomic, status-tracked subtasks) for current + future work
-RESUME_STORY.md  narrative, metrics timeline, key decisions
+recommender/       core: schemas, pantry rules, bottle matcher, LLM client, context, orchestrator
+evals/             fixtures, mock responses, grounding scorer, LLM judge, runner, inspect tool
+tests/             pytest unit tests — scorers, matcher, parser, judge, all API endpoints, RLS
+backend/
+  auth.py          JWT verification (offline, HS256, checks aud + role)
+  db.py            thin CRUD wrappers — all 6 tables, 2 RPCs, one new client per request
+  routers/         inventory, companions, sessions, session_drinks
+app/
+  main.py          FastAPI app: all routers, /recommend → real inventory + session lifecycle
+  static/          vanilla JS SPA with login, inventory, companions, recommend + verdict tabs
+docs/              eval-spec.md, adr-001-data-isolation.md, backend-spec.md
+backend/migrations/  001_init.sql — all tables, RLS policies, triggers, RPCs (idempotent)
+PLAN.md            build plan (atomic, status-tracked subtasks)
+RESUME_STORY.md    narrative, metrics timeline, key decisions
 ```
 
 ## Setup
@@ -92,19 +103,21 @@ RESUME_STORY.md  narrative, metrics timeline, key decisions
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-.venv/bin/pip install pytest          # for the test suite
 ```
 
-For live model calls, create a `.env` at the project root (see `env.template`):
+For live calls, create `.env` at the project root (see `env.template`):
 
 ```
 ANTHROPIC_API_KEY=sk-ant-...
+SUPABASE_PROJECT_URL=https://...supabase.co
+SUPABASE_ANON_KEY=...
+SUPABASE_JWT_TOKEN=...    # project JWT secret (Settings → API)
 ```
 
 ## Run
 
 ```bash
-.venv/bin/python -m pytest -q                       # unit tests
+.venv/bin/python -m pytest -q                       # 88 unit tests (3 live RLS tests skipped)
 .venv/bin/python -m evals.run_evals                 # offline eval (mock responses, no tokens)
 .venv/bin/python -m evals.run_evals --live          # eval against the real model
 .venv/bin/python -m evals.run_evals --live --judge  # + LLM judge
@@ -141,8 +154,12 @@ would only become a design factor at thousands-of-users scale.
 
 ## Status
 
-Recommender core, grounding eval, makeable-rate metric, and LLM judge are implemented
-and tested. A FastAPI + single-page frontend slice is complete and ready to deploy.
-Next up: live eval run (needs `ANTHROPIC_API_KEY`), then Railway deploy.
+**All Phase 6 (persistence) tasks complete** (pending P6.12 deploy + P6.11 live RLS run):
+- Supabase Auth (offline JWT verification, aud + role checks, service_role bypass guard)
+- Full CRUD for all 6 tables via supabase-py carrying the user JWT (RLS fires on every query)
+- Sessions + session_drinks with verdict → companion preference feedback (atomic via Postgres RPC)
+- Multi-tab SPA frontend: login, inventory, companions, recommend + verdict buttons
+- 88 passing unit tests (3 live RLS isolation tests skip without test credentials)
+- CI gate: pytest + offline eval `--strict` on every push
 
-**Live demo:** https://drinksuggesterproject-production.up.railway.app
+**Live demo:** https://drinksuggesterproject-production.up.railway.app _(needs redeploy after P6 changes)_

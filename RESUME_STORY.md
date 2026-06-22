@@ -123,6 +123,49 @@ business** for now, for reasons worth being able to articulate:
 which is why it's scoped AI-deep (eval-first) rather than full-stack breadth. If the
 business is ever revisited, the Wizard-of-Oz test above is the starting point — not more code.
 
+## Persistence layer engineering (Phase 6 — added after the eval foundation)
+
+**What was built:** Full multi-user backend — Supabase Auth + Postgres + FastAPI, a multi-tab
+SPA frontend, and a complete test suite covering every endpoint.
+
+**Key decisions and war stories:**
+
+1. **`supabase-py` over `asyncpg` — a real footgun caught.** The original spec combined
+   Supabase Auth (JWT + RLS) with raw `asyncpg`. Those two are silently incompatible:
+   `asyncpg` connects as the service role, so `auth.uid()` is never set in the DB session
+   and **every RLS policy becomes dead code.** A single forgotten `WHERE user_id` would
+   be a cross-user data leak with no second line of defense. Caught this before writing
+   a line of DB code; ADR-001 documents the decision and the why.
+
+2. **Thread-safe Supabase client.** `supabase-py`'s PostgREST auth state is not
+   thread-safe to mutate on a shared client. Solution: new `create_client()` per request,
+   then `client.postgrest.auth(user_jwt)`. Costs a tiny bit of overhead; correct is worth it.
+
+3. **JWT → `user_id` vs. JWT → DB.** A subtle latent bug found during P6.9: `get_current_user`
+   returns the `sub` claim (a UUID), and all routers passed that to `DB(user_jwt)`. But
+   `postgrest.auth()` needs the actual Bearer JWT, not the UUID. Tests missed it because DB
+   is mocked; caught before deploy by reading the code. Fixed: routers now `Depends(bearer_scheme)`
+   for the raw JWT, `Depends(get_current_user)` for validation.
+
+4. **Atomic preference reversal via Postgres RPC.** Updating a companion's preference from
+   "like" to "dislike" requires DELETE + INSERT. The supabase-py REST path can't do two-step
+   operations atomically. Solution: `ON CONFLICT (companion_id, value) DO UPDATE SET type = ?`
+   in a `SECURITY DEFINER` function — one round-trip, no TOCTOU race.
+
+5. **`/sessions/active` route ordering.** FastAPI matches path parameters greedily —
+   `GET /sessions/{id}` would capture "active" as a UUID param. Fixed by registering
+   `/sessions/active` before `/{id}` in the router file. Documented in the spec.
+
+6. **Defense-in-depth on `GET /sessions/{id}/drinks`.** Even with RLS, the application
+   explicitly checks session ownership before calling `list_session_drinks`. Two independent
+   layers must fail before a cross-user read succeeds.
+
+**Test count:** 88 passing unit tests (no live Supabase), 3 live RLS isolation tests
+(skipped without test credentials). Every endpoint has: auth-required test, happy path,
+and relevant error paths (404, 409, 422).
+
+---
+
 ## Open decisions / next steps
 
 - [x] **Pantry boundary:** decided — honey/cinnamon stay as legitimate "grab these"

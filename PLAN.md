@@ -227,4 +227,5 @@ Goal: multi-user persistence. **Follow `docs/adr-001-data-isolation.md` — Supa
 - [x] **P6.11 RLS isolation test:** two users; confirm user A cannot read/write user B's rows.
       _`tests/test_rls_isolation.py`; 3 tests (read + write + companion isolation); auto-skipped without TEST_USER_A/B credentials; 🧑 create two Supabase test accounts + add to .env to run live._
 - [ ] **P6.12 🧑 Deploy** (Railway backend + Supabase + Vercel/static frontend); set all secrets (human).
-- [ ] **P6.13 Update** `README.md` + `RESUME_STORY.md`; commit.
+- [x] **P6.13 Update** `README.md` + `RESUME_STORY.md`; commit.
+      _Architecture section updated with full persistence layer; status reflects 88 tests + P6 complete; RESUME_STORY.md adds 6 persistence engineering decisions._
