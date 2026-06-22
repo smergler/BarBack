@@ -145,4 +145,4 @@ Recommender core, grounding eval, makeable-rate metric, and LLM judge are implem
 and tested. A FastAPI + single-page frontend slice is complete and ready to deploy.
 Next up: live eval run (needs `ANTHROPIC_API_KEY`), then Railway deploy.
 
-_A live demo link will go here once deployed._
+**Live demo:** https://drinksuggesterproject-production.up.railway.app

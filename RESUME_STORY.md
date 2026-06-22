@@ -141,5 +141,5 @@ business is ever revisited, the Wizard-of-Oz test above is the starting point â€
   JUDGE: constraints 74%, occasion fit 4.6/5, plausibility 4.4/5, **name accuracy 58%** â€”
   the model grounds correctly but misnames ~42% of drinks (Boulevardier called a "Negroni" etc).
   This is the next concrete improvement target.
-- [ ] **Railway deploy** (human steps: `railway login`, `railway up`, set key in dashboard);
-  then live URL goes in README + here.
+- [x] **Railway deploy** complete. Live URL: https://drinksuggesterproject-production.up.railway.app
+  (`railway.toml` start command + ANTHROPIC_API_KEY set in Railway dashboard).

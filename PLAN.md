@@ -62,7 +62,7 @@ Goal: produce the quality numbers grounding can't (built + unit-tested, never ru
 - [x] **2.4 Record** the judge numbers in `RESUME_STORY.md`; commit.
       _Recorded; name accuracy 58% flagged as next improvement target._
 
-## Task 3 — Deploy a thin vertical slice (live URL)  ·  Status: in progress
+## Task 3 — Deploy a thin vertical slice (live URL)  ·  Status: in progress (pending browser verify)
 
 Goal: a clickable demo. Keep it minimal — no DB, no auth, hardcoded inventory for v1.
 
@@ -82,10 +82,10 @@ Goal: a clickable demo. Keep it minimal — no DB, no auth, hardcoded inventory 
       _Created; ingredient source badges color-coded (inventory/pantry/perishable/missing)._
 - [x] **3.5 Serve static** from FastAPI (`StaticFiles` mounted at `/`). Verify the page works against local API.
       _StaticFiles uses absolute path (Path(__file__).parent/static); rate limiter (20/min global, 10/min /recommend); RecommendationError → 502; input max_length 200 + count 1-10; frontend XSS-safe via txt() escaping + 30s fetch timeout; 34 tests green._
-- [ ] **3.6 🧑 Deploy to Railway**: `railway.toml` written (start cmd `uvicorn app.main:app --host 0.0.0.0 --port $PORT`).
-      Human steps: `railway login`, `railway up`, set `ANTHROPIC_API_KEY` in Railway dashboard.
+- [x] **3.6 🧑 Deploy to Railway**: deployed. URL: https://drinksuggesterproject-production.up.railway.app
 - [ ] **3.7 🧑 Verify the live URL** end-to-end from a browser (human). Then put the URL in
       `README.md` and `RESUME_STORY.md`. Commit.
+      _URL recorded in README + RESUME_STORY; pending browser verification._
 
 ## Task 4 — README that tells the story  ·  Status: in progress
 
