@@ -8,6 +8,7 @@ on:
 jobs:
   live-eval:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     # Never run on forks — keeps ANTHROPIC_API_KEY off untrusted runners.
     if: github.repository_owner == 'smergler'
 
@@ -16,11 +17,14 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
           cache: pip
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt pytest
+
+      - name: Unit tests
+        run: python -m pytest -q
 
       - name: Live eval + judge (strict)
         env:

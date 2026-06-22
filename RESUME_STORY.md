@@ -15,12 +15,17 @@ deterministic **eval harness** that measures and protects recommendation quality
 
 ## The metrics timeline (the spine of the story)
 
-| Milestone | Grounding rate | Notes |
-|---|---|---|
-| Mock baseline (offline, seeded-violation stubs) | **64%** | Proved the scorer catches hallucinated ownership before spending a token. |
-| **Live baseline** (claude-haiku-4-5) | **91%** | 10/11 grounded. The 1 failure: model labeled honey/cinnamon as `pantry` (over-assumed on-hand). |
-| After tightening the pantry definition in the system prompt | **100%** | Model now flags honey/spices as `perishable` ("grab these") instead of assuming them. Real before/after. |
-| Live + 4 adversarial classics (Negroni w/o gin, Sazerac w/o Peychaud's, Mai Tai w/ bourbon only, count=5 from 3 bottles) | **100% grounded** | Model **flags, doesn't fake** — substitutes or marks `missing`, never claims an unowned bottle. But see below: grounding ≠ makeable. |
+_All "mock" numbers are from offline runs with seeded-violation stubs — no tokens spent.
+"Current" refers to the 12-scenario set including 4 adversarial named-classic scenarios added later._
+
+| Milestone | Grounding | Makeable | Makeable-now | Notes |
+|---|---|---|---|---|
+| Mock baseline — original 8 scenarios | **64%** | — | — | Proved the scorer catches hallucinated ownership before spending a token. |
+| **Live baseline** (claude-haiku-4-5), original 8 scenarios | **91%** | — | — | 10/11 grounded. Failure: model labeled honey/cinnamon as `pantry` (over-assumed on-hand). |
+| After tightening the pantry system prompt | **100%** | — | — | Model now flags honey/spices as `perishable` ("grab these"). Real before/after. |
+| Live + 4 adversarial classics added (Negroni w/o gin, Sazerac, Mai Tai, count=5 from 3 bottles) | **100% grounded** | — | — | Model flags, doesn't fake — substitutes or marks `missing`. But see below: grounding ≠ makeable. |
+| Mock baseline — current 12-scenario set + makeable metric added | **53%** | **88%** | **50%** | Lower grounding% expected: adversarial scenarios drag the mock average down (they're designed to catch violations). Makeable 88% means most open-ended suggestions are anchored in ≥1 owned bottle. |
+| **Next: live run** | — | — | — | Run `evals.run_evals --live --judge` and fill in here. |
 
 ## Engineering decisions worth talking about (the "why" matters more than the "what")
 
@@ -92,7 +97,7 @@ I added a makeable-rate metric and an LLM judge to cover the axes grounding can'
 - "I built and measured against mocks first, with seeded failures, so I knew the
   harness worked before spending a token."
 - "The eval caught the model over-assuming pantry items; I tightened the grounding
-  definition and the rate moved from X to Y."
+  definition and the rate moved from 91% to 100%."
 
 ## Product framing — why a portfolio piece, not a business (yet)
 

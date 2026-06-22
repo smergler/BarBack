@@ -30,10 +30,12 @@ The recommender is graded by a measurement harness, not vibes:
 
 | Milestone | Grounding | Makeable | Makeable-now | Notes |
 |---|---|---|---|---|
-| Mock baseline (seeded violations) | 53% | 88% | 50% | Proved the scorer catches violations before spending a token. |
-| Live baseline (pending) | — | — | — | Run `.venv/bin/python -m evals.run_evals --live` after setting ANTHROPIC_API_KEY. |
+| Mock baseline, original 8 scenarios (seeded violations) | 64% | — | — | Proved the scorer catches violations before spending a token. |
+| Live baseline after prompt tightening | 100% | — | — | Grounding failure → pantry boundary fix → metric moved. |
+| Mock baseline, current 12 scenarios (+ adversarial) | 53% | 88% | 50% | Lower grounding% expected: adversarial scenarios are designed to catch violations. |
+| Live run (pending) | — | — | — | Run `.venv/bin/python -m evals.run_evals --live --judge` after setting `ANTHROPIC_API_KEY`. |
 
-_Live numbers will be filled in here after the first live run._
+_See [`RESUME_STORY.md`](RESUME_STORY.md) for the full story including why 53% grounding mock ≠ regression._
 
 See [`docs/eval-spec.md`](docs/eval-spec.md) for exact definitions and
 [`RESUME_STORY.md`](RESUME_STORY.md) for the full narrative and engineering decisions.
@@ -53,9 +55,9 @@ Defense in depth: both the application *and* the database must fail before data 
 The throughput cost of PostgREST over a direct connection is irrelevant at personal/portfolio scale.
 
 > **Interview one-liner:** "I chose DB-enforced row-level security over app-enforced
-> `WHERE user_id` filtering, because a single forgotten filter in a multi-tenant app is
-> a data breach — and I caught that raw asyncpg would have silently bypassed RLS and
-> made the policies dead code."
+> `WHERE user_id` filtering, because in a multi-tenant app a single forgotten filter is
+> a data breach — and I caught that wiring up raw asyncpg would have silently bypassed
+> RLS and made the policies dead code."
 
 ## Architecture (current)
 

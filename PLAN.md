@@ -105,8 +105,8 @@ Goal: a clickable demo. Keep it minimal — no DB, no auth, hardcoded inventory 
 - [x] **5.3 Run `python -m evals.run_evals`** (mock mode — no API key in CI). **Added `--strict` flag**
       that exits non-zero if any property assertion fails; used in CI.
       _`--strict` added to run_evals.py; exits 0 when all pass, 1 on failures._
-- [ ] **5.4 🧑 (Optional) nightly live eval**: workflow YAML written below; adding `ANTHROPIC_API_KEY`
-      **repo secret** is a human step in GitHub settings.
+- [x] **5.4 🧑 (Optional) nightly live eval**: `.github/workflows/nightly-eval.yml` written (Python 3.14,
+      pytest + live eval + judge, 10-min timeout, fork guard). Human step: add `ANTHROPIC_API_KEY` repo secret.
 - [ ] **5.5 Add a CI status badge** to `README.md`. Commit. _(blocked on repo having CI run first)_
 
 ---
