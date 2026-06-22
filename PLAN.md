@@ -216,7 +216,8 @@ Goal: multi-user persistence. **Follow `docs/adr-001-data-isolation.md` — Supa
       _backend/db.py; DB class; new client per request (thread-safe); postgrest.auth(user_jwt) so RLS fires; covers all 6 tables + 2 RPCs; 41 tests green._
 - [x] **P6.6 Inventory endpoints** (GET/POST/PUT/DELETE, soft-delete via `is_active`). Tests: auth required, 404/403.
       _`backend/routers/inventory.py` + 8 tests; fixed `patch` → `app.dependency_overrides`; bare `raise` → 500; 49 tests green._
-- [ ] **P6.7 Companions endpoints** + feedback (implement the verdict→like/dislike rule from the spec). Tests.
+- [x] **P6.7 Companions endpoints** + feedback (implement the verdict→like/dislike rule from the spec). Tests.
+      _`backend/routers/companions.py` (13 tests) + `backend/routers/session_drinks.py` (8 tests); fuzzy bottle→category resolution via `match_bottle`; bumped bottle limit to 1000 to avoid silent truncation; 71 tests green._
 - [ ] **P6.8 Sessions + session_drinks endpoints**; implement "current session" per the spec. Tests.
 - [ ] **P6.9 Point `/recommend` at the user's real inventory** (replace the hardcoded fixture from Task 3).
 - [ ] **P6.10 Frontend:** login, inventory manage, companions, sessions, recommend screen (extend Task 3's page).
