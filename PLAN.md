@@ -204,8 +204,9 @@ Goal: multi-user persistence. **Follow `docs/adr-001-data-isolation.md` — Supa
       the **companion-feedback verdict→like/dislike rule**, and a concrete definition of **"current session"**.
       _Written + reviewed + revised. Key fixes: RPC for atomic preference reversal (ON CONFLICT DO UPDATE); partial unique index for one-open-session-per-user; /sessions/active not /sessions/current (routing conflict); cross-user companion guard documented; PUT /companions/{id} added; GET /sessions/{id} added; trigger statements completed._
 - [ ] **P6.1 🧑 Create the Supabase project**; collect URL, anon key, service key, JWT secret (human).
-- [ ] **P6.2 Write `backend/migrations/001_init.sql`** from the spec: tables + `UNIQUE(user_id, name)` where
+- [x] **P6.2 Write `backend/migrations/001_init.sql`** from the spec: tables + `UNIQUE(user_id, name)` where
       needed + RLS policies (`auth.uid() = user_id`) + `updated_at` trigger.
+      _Written. Includes partial unique index for one-open-session-per-user, RLS on all 6 tables, upsert RPCs, idempotent (DROP IF EXISTS on policies/triggers)._
 - [ ] **P6.3 🧑 Apply the migration** in the Supabase SQL editor (human).
 - [ ] **P6.4 Auth dependency:** FastAPI `get_current_user` that verifies the Supabase JWT locally against the
       JWT secret and returns `user_id`; 401 on invalid. Unit-test with a signed test token.
