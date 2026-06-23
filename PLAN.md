@@ -128,18 +128,18 @@ Goal: a clickable demo. Keep it minimal — no DB, no auth, hardcoded inventory 
 
 Same rules as Phase 1: atomic subtasks, exact files, a Verify step, commit at each green step.
 
-### P1 — Multi-model sweep  ·  Status: not started
+### P1 — Multi-model sweep  ·  Status: in progress (needs live run P1.4)
 Goal: benchmark Haiku/Sonnet/Opus on the eval and choose one, with cost/latency in the picture.
-- [ ] **P1.1 Parameterize the model.** In `recommender/llm.py`, add a `model` arg to `AnthropicClient.__init__`
+- [x] **P1.1 Parameterize the model.** In `recommender/llm.py`, add a `model` arg to `AnthropicClient.__init__`
       (default the current Haiku id). In `evals/run_evals.py` add `--model <id>` and pass it through.
-      **Verify:** `--live --model claude-haiku-4-5` still runs.
-- [ ] **P1.2 Capture usage.** Have `AnthropicClient` record `input_tokens`/`output_tokens` per call
-      (read `msg.usage`) onto a public counter on the instance. Add a price table
-      `{model: (in_per_mtok, out_per_mtok)}` in `evals/sweep.py` (Haiku 1/5, Sonnet 4.6 3/15, Opus 4.8 5/25).
-- [ ] **P1.3 Create `evals/sweep.py`.** For each model in a list, run all scenarios (grounding + makeable +
-      judge), accumulate tokens + wall-clock, print one row per model: grounding%, makeable%, judge avgs,
-      total tokens, est cost, total seconds.
-- [ ] **P1.4 🧑 Run the sweep live** (3× token cost across 3 models — still cents). `.venv/bin/python -m evals.sweep`.
+      _Done as part of P4; run_evals.py updated with `--model` flag and dynamic mode line._
+- [x] **P1.2 Capture usage.** `AnthropicClient.last_usage: UsageStats` captures `input_tokens`/`output_tokens`
+      per call. Price table `PRICE_TABLE` in `evals/sweep.py`.
+      _Done as part of P4; `last_usage` recorded in both `generate()` and `generate_structured()`._
+- [x] **P1.3 Create `evals/sweep.py`.** For each model in a list, run all scenarios (grounding + makeable +
+      optionally judge), accumulate tokens + wall-clock, print one row per model.
+      _Created `evals/sweep.py`; `--models` flag; `--judge` flag; PRICE_TABLE for Haiku/Sonnet/Opus._
+- [ ] **P1.4 🧑 Run the sweep live**: `.venv/bin/python -m evals.sweep [--judge]`. Record output.
 - [ ] **P1.5 Record** the comparison table + a one-paragraph "why I chose X" in `RESUME_STORY.md`; commit.
 - [ ] **P1.6 Set the chosen model** as the default in `AnthropicClient` (or via env); note the decision. Commit.
 

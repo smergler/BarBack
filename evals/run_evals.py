@@ -28,6 +28,7 @@ def main() -> None:
     parser.add_argument("--live", action="store_true", help="call the real Claude model")
     parser.add_argument("--judge", action="store_true", help="also run the LLM-as-judge (live only)")
     parser.add_argument("--strict", action="store_true", help="exit non-zero if any property assertion fails (for CI)")
+    parser.add_argument("--model", default=None, help="override model id (live only; default: haiku)")
     args = parser.parse_args()
 
     if args.live:
@@ -37,7 +38,8 @@ def main() -> None:
                 "ANTHROPIC_API_KEY not set. Add it to a .env file at the project root "
                 "or export it before running --live."
             )
-        mode = "LIVE (claude-haiku-4-5-20251001)"
+        _probe = AnthropicClient(model=args.model)
+        mode = f"LIVE ({_probe._model})"
     else:
         mode = "MOCK (offline)"
 
@@ -56,7 +58,7 @@ def main() -> None:
 
     for sc in SCENARIOS:
         if args.live:
-            llm = AnthropicClient()  # reads ANTHROPIC_API_KEY
+            llm = AnthropicClient(model=args.model)  # reads ANTHROPIC_API_KEY
         else:
             llm = MockClient(MOCK_RESPONSES, key=sc.id)
 
