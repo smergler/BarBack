@@ -149,6 +149,11 @@
     </details>
     <div id="inv-error" class="error-msg"></div>
     <div class="list" id="bottle-list"></div>
+    <div id="bottle-pagination" style="margin-top:.75rem;align-items:center;gap:.5rem;flex-wrap:wrap;display:none">
+      <button class="btn btn-sm btn-ghost" id="bottle-prev">← Prev</button>
+      <span id="bottle-page-info" style="font-size:.82rem;color:#aaa;flex:1;text-align:center"></span>
+      <button class="btn btn-sm btn-ghost" id="bottle-next">Next →</button>
+    </div>
   </div>
 
   <!-- Companions tab -->
@@ -302,18 +307,34 @@
   }
 
   let bottles = [];
+  let bottlePage = 0;
+  const BOTTLE_PAGE_SIZE = 20;
 
   async function loadInventory() {
     try {
-      bottles = await api('GET', '/inventory');
+      bottles = await api('GET', '/inventory?limit=1000');
+      bottlePage = 0;
       renderBottles();
     } catch (e) { /* silently retry later */ }
   }
 
   function renderBottles() {
     const el = document.getElementById('bottle-list');
-    if (!bottles.length) { el.innerHTML = '<p style="color:#aaa;font-size:.88rem">No bottles yet.</p>'; return; }
-    el.innerHTML = bottles.map(b => `
+    const pagEl = document.getElementById('bottle-pagination');
+    const infoEl = document.getElementById('bottle-page-info');
+
+    if (!bottles.length) {
+      el.innerHTML = '<p style="color:#aaa;font-size:.88rem">No bottles yet.</p>';
+      pagEl.style.display = 'none';
+      return;
+    }
+
+    const totalPages = Math.ceil(bottles.length / BOTTLE_PAGE_SIZE);
+    bottlePage = Math.max(0, Math.min(bottlePage, totalPages - 1));
+    const start = bottlePage * BOTTLE_PAGE_SIZE;
+    const page = bottles.slice(start, start + BOTTLE_PAGE_SIZE);
+
+    el.innerHTML = page.map(b => `
       <div class="list-item">
         <span>${txt(b.name)}</span>
         <span class="badge">${txt(b.category)}</span>
@@ -322,7 +343,19 @@
     el.querySelectorAll('[data-id]').forEach(btn => {
       btn.addEventListener('click', () => removeBottle(btn.dataset.id));
     });
+
+    if (totalPages > 1) {
+      pagEl.style.display = 'flex';
+      infoEl.textContent = `Page ${bottlePage + 1} of ${totalPages} (${bottles.length} bottles)`;
+      document.getElementById('bottle-prev').disabled = bottlePage === 0;
+      document.getElementById('bottle-next').disabled = bottlePage === totalPages - 1;
+    } else {
+      pagEl.style.display = 'none';
+    }
   }
+
+  document.getElementById('bottle-prev').addEventListener('click', () => { bottlePage--; renderBottles(); });
+  document.getElementById('bottle-next').addEventListener('click', () => { bottlePage++; renderBottles(); });
 
   document.getElementById('add-bottle-btn').addEventListener('click', async () => {
     const name = document.getElementById('bottle-name').value.trim();
