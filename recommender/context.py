@@ -26,6 +26,13 @@ Do NOT label honey, spices, juices, dairy, or specialty syrups as "pantry" — t
 go under "perishable" so the user is told to grab them. If a great drink needs a
 bottle the user lacks, include it as "missing" rather than pretending they have it.
 
+NAMING RULE: Classic cocktail names belong to specific recipes. If you substitute
+the base spirit (e.g. bourbon instead of gin, mezcal instead of tequila), do NOT
+use the classic name — give the drink a descriptive name that reflects what it
+actually is. Examples: bourbon+Campari+vermouth is a "Boulevardier", not a "Negroni";
+mezcal+Campari+vermouth is a "Oaxacan Negroni" or "Mezcal Negroni", not a "Negroni".
+An Old Fashioned requires bitters — without them, call it something else.
+
 When companions are listed, for each suggestion include a "suited_for" list naming
 who will most enjoy it — use each person's name exactly as listed, plus "me" for the
 host. An empty list means the drink suits everyone equally. Do not invent names not
@@ -54,7 +61,12 @@ def _retrieval_query(req: RecommendRequest, inventory: list[Bottle]) -> str:
 
 
 def _format_retrieved(recipes: list) -> str:
-    lines = ["\nCanonical reference recipes (use these to name drinks correctly):"]
+    lines = [
+        "\nCanonical recipe reference — for naming only:",
+        "If your suggestion matches one of these classics (same base spirit, same structure),",
+        "use that name. If you've substituted the base spirit or changed the structure,",
+        "use a descriptive name instead — do NOT borrow the classic name.",
+    ]
     for r in recipes:
         ingredients = ", ".join(
             f"{i['name']} ({i['measure']})" if i.get("measure") else i["name"]
