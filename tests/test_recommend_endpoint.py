@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import os
 from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
@@ -45,7 +46,8 @@ def _mocked(bottles=None, active_session=None):
 
     app.dependency_overrides[get_current_user] = lambda: "user-1"
     with patch("app.main.DB", return_value=mock_db), \
-         patch("app.main.recommend", return_value=MOCK_RESULT):
+         patch("app.main.recommend", return_value=MOCK_RESULT), \
+         patch.dict(os.environ, {"ANTHROPIC_API_KEY": "fake-key-for-tests"}):
         try:
             yield mock_db
         finally:
