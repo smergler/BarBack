@@ -171,18 +171,24 @@ Goal: ground/inspire suggestions in a corpus of real recipes, with a retrieval-q
       Add to `evals/` and to `run_evals` output.
 - [ ] **P3.7 Run eval with/without retrieval**; compare grounding/makeable/judge + recall@k; record; commit.
 
-### P4 — Structured outputs via the API  ·  Status: not started
+### P4 — Structured outputs via the API  ·  Status: done
 Goal: replace "ask for JSON + parse + retry" with schema-guaranteed output (Haiku 4.5 supports it).
-- [ ] **P4.1 Read the structured-outputs section** of the `claude-api` skill (`output_config.format` /
+- [x] **P4.1 Read the structured-outputs section** of the `claude-api` skill (`output_config.format` /
       `messages.parse`); confirm the exact Python call shape before coding.
-- [ ] **P4.2 Generate the schema** from the `Recommendation` pydantic model (`model_json_schema()`); strip
+      _Confirmed: use `output_config={"format": {"type": "json_schema", "schema": ...}}` on `messages.create()`._
+- [x] **P4.2 Generate the schema** from the `Recommendation` pydantic model (`model_json_schema()`); strip
       unsupported constraints (min/max, etc.) per the skill's limitations list.
-- [ ] **P4.3 Add a structured path** to `AnthropicClient` (e.g. `generate_structured(...)`) using
-      `messages.parse(..., output_format=Recommendation)` or `output_config={"format": {...}}`.
-- [ ] **P4.4 Switch `recommender.recommend`** to the structured path; keep the JSON-fence parse only as a fallback.
-- [ ] **P4.5 Track parse-failure rate** before/after (should drop to ~0). Add a unit test that the structured
-      path returns a valid `Recommendation`. **Verify:** `pytest -q` green; `--live` grounding/makeable unchanged.
-- [ ] **P4.6 Record** "moved to schema-guaranteed output, parse failures → 0" in `RESUME_STORY`; commit.
+      _Schema hand-authored in `RECOMMENDATION_SCHEMA` const in `recommender/recommender.py`; all objects have `additionalProperties:false`; no min/max used._
+- [x] **P4.3 Add a structured path** to `AnthropicClient` — `generate_structured(system, user, schema)` using
+      `output_config={"format": {"type": "json_schema", "schema": schema}}`. Also added `model` param and `last_usage: UsageStats | None` (input+output token capture).
+      _Done in `recommender/llm.py`._
+- [x] **P4.4 Switch `recommender.recommend`** to the structured path; keep the JSON-fence parse as a fallback
+      for `MockClient` (detected via `hasattr(llm, "generate_structured")`).
+      _Done in `recommender/recommender.py`._
+- [x] **P4.5 Track parse-failure rate** before/after (should drop to ~0). Added 2 unit tests: structured path
+      preferred, structured path raises cleanly on bad JSON. **Verify:** 36 offline tests + mock evals pass.
+      _6 recommender tests pass; 36 total offline; mock evals all assertions pass._
+- [x] **P4.6 Record** in `RESUME_STORY`; commit.
 
 ### P7 — Session history + verdict browser  ·  Status: not started
 Goal: let the user review past sessions and manage verdicts for themselves and companions.

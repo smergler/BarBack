@@ -47,3 +47,30 @@ def test_raises_after_two_failures():
     with pytest.raises(RecommendationError):
         recommend(REQ, INV, client)
     assert client.calls == 2
+
+
+class StructuredClient:
+    """Simulates AnthropicClient's structured path; generate() must not be called."""
+
+    def __init__(self, response: str):
+        self._response = response
+        self.calls = 0
+
+    def generate(self, system, user):  # noqa: ARG002
+        raise AssertionError("generate() should not be called on structured path")
+
+    def generate_structured(self, system, user, schema):  # noqa: ARG002
+        self.calls += 1
+        return self._response
+
+
+def test_structured_path_preferred_when_available():
+    client = StructuredClient(VALID)
+    rec = recommend(REQ, INV, client)
+    assert rec.suggestions[0].name == "Old Fashioned"
+    assert client.calls == 1
+
+
+def test_structured_path_raises_on_invalid_json():
+    with pytest.raises(RecommendationError, match="Structured output parse failed"):
+        recommend(REQ, INV, StructuredClient("not valid json"))

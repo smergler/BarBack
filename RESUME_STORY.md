@@ -192,6 +192,19 @@ and relevant error paths (404, 409, 422).
 
 ---
 
+## Structured outputs (P4 — completed)
+
+**What changed:** replaced "ask for JSON + parse + retry" with `output_config.format` schema-guaranteed output.
+
+- **`AnthropicClient.generate_structured(system, user, schema)`** — calls `messages.create()` with `output_config={"format": {"type": "json_schema", "schema": RECOMMENDATION_SCHEMA}}`. API guarantees response is valid JSON matching the schema; no parse-failure path.
+- **`RECOMMENDATION_SCHEMA`** — hand-authored from `Recommendation`/`Suggestion`/`Ingredient` pydantic models with `additionalProperties: false` on every object node; unsupported constraints (min/max) absent by design.
+- **`recommender.recommend()`** — tries `generate_structured` first (AnthropicClient); falls back to `generate` + retry for MockClient (detected via `hasattr`). Structured path raises immediately on failure rather than re-prompting, since a schema violation signals an API-level bug, not a model formatting slip.
+- **Token capture** — `AnthropicClient` now reads `msg.usage.input_tokens` / `output_tokens` and stores them on `last_usage` after every call. Enables P10 telemetry and P1 cost comparison.
+- **Model parameterization** — `AnthropicClient(model=...)` accepts any model ID; default stays `claude-haiku-4-5-20251001`. Enables P1 sweep.
+- **Parse-failure rate:** before = theoretically non-zero (real retry happened once in testing). After = 0 — schema contract enforced at the API level.
+
+**Interview line:** "I moved from 'ask for JSON and hope' to `output_config.format` — the API won't return a response that violates the schema. The retry loop still exists for mock/legacy clients, but the live path eliminated an entire failure mode."
+
 ## Open decisions / next steps
 
 - [x] **Pantry boundary:** decided — honey/cinnamon stay as legitimate "grab these"

@@ -1,12 +1,19 @@
 from __future__ import annotations
 
-from typing import Protocol
+from dataclasses import dataclass
+from typing import Any, Protocol
 
 
 class LLMClient(Protocol):
     def generate(self, system: str, user: str) -> str:
         """Return the model's raw text response (expected to be JSON)."""
         ...
+
+
+@dataclass
+class UsageStats:
+    input_tokens: int
+    output_tokens: int
 
 
 class MockClient:
@@ -24,29 +31,55 @@ class MockClient:
 
 
 class AnthropicClient:
-    """Live client. Not exercised yet (no API key) — wired for later use."""
+    """Live client that calls the Anthropic Messages API."""
 
-    MODEL = "claude-haiku-4-5-20251001"
+    DEFAULT_MODEL = "claude-haiku-4-5-20251001"
 
     def __init__(
         self,
         api_key: str | None = None,
+        model: str | None = None,
         max_tokens: int = 2000,
         temperature: float = 0.3,
     ):
         self._api_key = api_key
+        self._model = model or self.DEFAULT_MODEL
         self._max_tokens = max_tokens
         self._temperature = temperature
+        self.last_usage: UsageStats | None = None
 
     def generate(self, system: str, user: str) -> str:
         from anthropic import Anthropic  # lazy import; optional dependency
 
         client = Anthropic(api_key=self._api_key)
         msg = client.messages.create(
-            model=self.MODEL,
+            model=self._model,
             max_tokens=self._max_tokens,
             temperature=self._temperature,
             system=system,
             messages=[{"role": "user", "content": user}],
+        )
+        self.last_usage = UsageStats(
+            input_tokens=msg.usage.input_tokens,
+            output_tokens=msg.usage.output_tokens,
+        )
+        return msg.content[0].text
+
+    def generate_structured(self, system: str, user: str, schema: dict[str, Any]) -> str:
+        """Generate with output_config.format for guaranteed-valid JSON matching schema."""
+        from anthropic import Anthropic  # lazy import; optional dependency
+
+        client = Anthropic(api_key=self._api_key)
+        msg = client.messages.create(
+            model=self._model,
+            max_tokens=self._max_tokens,
+            temperature=self._temperature,
+            system=system,
+            messages=[{"role": "user", "content": user}],
+            output_config={"format": {"type": "json_schema", "schema": schema}},
+        )
+        self.last_usage = UsageStats(
+            input_tokens=msg.usage.input_tokens,
+            output_tokens=msg.usage.output_tokens,
         )
         return msg.content[0].text
