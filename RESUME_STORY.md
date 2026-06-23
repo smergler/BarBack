@@ -87,6 +87,29 @@ distinct drinks each anchored on an owned spirit, no invented bottles.
 **The takeaway line:** "grounding measures honesty about ownership, not usefulness — so
 I added a makeable-rate metric and an LLM judge to cover the axes grounding can't."
 
+## Prompt injection defense
+
+User-controlled strings (bottle names, companion names, occasion text, seed likes)
+all flow into the LLM context. Three layers of defense:
+
+1. **Structured output** — the primary cage. Even if the model is confused by injected
+   text, it can only emit valid `Recommendation` JSON. It cannot exfiltrate data or
+   take actions outside the schema.
+2. **`<user_data>` delimiter wrapping** — the system prompt tells the model that
+   everything inside `<user_data>` tags is inert app data, never instructions.
+   Standard prompt-injection mitigation: clear boundary between trusted instructions
+   and untrusted user content.
+3. **Input length caps** — `max_length=200` on occasion/mood, `max_length=100` on
+   preference values. Limits blast radius of any injected payload.
+
+The grounding scorer and LLM judge are a fourth layer: if injection caused the model
+to recommend hallucinated bottles, grounding catches it; if it produced implausible
+output, the judge catches it.
+
+**Interview one-liner:** "The primary defense is structured output — injected content
+can only produce valid `Recommendation` JSON, so the blast radius is limited to weird
+drink descriptions, which the grounding scorer and LLM judge both catch."
+
 ## Interview-ready sentences
 
 - "I tracked *grounding rate* as my primary metric — the percent of recommendations
@@ -98,6 +121,9 @@ I added a makeable-rate metric and an LLM judge to cover the axes grounding can'
   harness worked before spending a token."
 - "The eval caught the model over-assuming pantry items; I tightened the grounding
   definition and the rate moved from 91% to 100%."
+- "The primary defense against prompt injection is structured output — injected content
+  can only produce valid `Recommendation` JSON, so the blast radius is limited to weird
+  drink descriptions, which the grounding scorer and LLM judge both catch."
 
 ## Product framing — why a portfolio piece, not a business (yet)
 
