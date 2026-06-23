@@ -82,3 +82,10 @@ def delete_preference(companion_id: str, preference_id: str, db: DB = Depends(_d
     found = db.delete_preference(preference_id)
     if not found:
         raise HTTPException(status_code=404, detail="Preference not found")
+
+
+@router.get("/{companion_id}/history")
+def get_companion_history(companion_id: str, db: DB = Depends(_db)) -> list[dict]:
+    if db.get_companion(companion_id) is None:
+        raise HTTPException(status_code=404, detail="Companion not found")
+    return db.get_companion_history(companion_id)

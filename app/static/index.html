@@ -64,6 +64,21 @@
     .inline-form input { flex: 1; }
     .divider { border: none; border-top: 1px solid #2d3561; margin: 1.25rem 0; }
     .session-divider { text-align: center; color: #555; font-size: 0.78rem; margin: 1.5rem 0 0.5rem; letter-spacing: 0.05em; }
+    .session-row { background: #16213e; border: 1px solid #2d3561; border-radius: 8px; margin-bottom: .6rem; overflow: hidden; }
+    .session-row-header { display: flex; align-items: center; gap: .75rem; padding: .75rem 1rem; cursor: pointer; }
+    .session-row-header:hover { background: #1d2a4a; }
+    .session-row-header .occasion { flex: 1; font-weight: 600; color: #e2b96f; }
+    .session-row-header .meta { font-size: .78rem; color: #aaa; }
+    .session-row-body { display: none; padding: .75rem 1rem; border-top: 1px solid #2d3561; }
+    .session-row-body.open { display: block; }
+    .session-drink-row { display: flex; align-items: center; gap: .5rem; padding: .35rem 0; border-bottom: 1px solid #1a1a2e; }
+    .session-drink-row:last-child { border-bottom: none; }
+    .session-drink-name { flex: 1; font-size: .9rem; }
+    .history-empty { color: #aaa; font-size: .88rem; margin-top: 1rem; }
+    .companion-hist-panel { margin-top: .5rem; padding: .6rem; background: #0f1628; border-radius: 6px; font-size: .82rem; display: none; }
+    .companion-hist-panel.open { display: block; }
+    .companion-hist-row { display: flex; gap: .5rem; padding: .25rem 0; border-bottom: 1px solid #1a2040; font-size: .82rem; }
+    .companion-hist-row:last-child { border-bottom: none; }
   </style>
 </head>
 <body>
@@ -98,6 +113,7 @@
     <button class="nav-btn active" data-tab="recommend">Recommend</button>
     <button class="nav-btn" data-tab="inventory">Inventory</button>
     <button class="nav-btn" data-tab="companions">Companions</button>
+    <button class="nav-btn" data-tab="history">History</button>
     <button class="nav-btn" id="signout-btn">Sign out</button>
   </nav>
 
@@ -163,6 +179,13 @@
       <span id="bottle-page-info" style="font-size:.82rem;color:#aaa;flex:1;text-align:center"></span>
       <button class="btn btn-sm btn-ghost" id="bottle-next">Next →</button>
     </div>
+  </div>
+
+  <!-- History tab -->
+  <div class="tab" id="tab-history">
+    <h2>Session History</h2>
+    <div id="history-error" class="error-msg"></div>
+    <div id="session-list"></div>
   </div>
 
   <!-- Companions tab -->
@@ -243,6 +266,7 @@
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      if (btn.dataset.tab === 'history') loadHistory();
     });
   });
 
@@ -435,8 +459,10 @@
       <div class="list-item" style="flex-wrap:wrap;gap:.5rem">
         <span>${txt(c.name)}</span>
         <button class="btn btn-sm btn-ghost" data-id="${txt(c.id)}" data-action="prefs">Preferences</button>
+        <button class="btn btn-sm btn-ghost" data-id="${txt(c.id)}" data-action="hist">History</button>
         <button class="btn btn-sm btn-danger" data-id="${txt(c.id)}" data-action="del">Remove</button>
         <div id="prefs-${txt(c.id)}" style="display:none;width:100%;margin-top:.5rem;padding-left:.5rem;border-left:2px solid #2d3561"></div>
+        <div id="hist-${txt(c.id)}" class="companion-hist-panel"></div>
       </div>`).join('');
     el.querySelectorAll('[data-action="del"]').forEach(btn => {
       btn.addEventListener('click', () => removeCompanion(btn.dataset.id));
@@ -444,6 +470,27 @@
     el.querySelectorAll('[data-action="prefs"]').forEach(btn => {
       btn.addEventListener('click', () => togglePrefs(btn.dataset.id));
     });
+    el.querySelectorAll('[data-action="hist"]').forEach(btn => {
+      btn.addEventListener('click', () => toggleCompanionHistory(btn.dataset.id));
+    });
+  }
+
+  async function toggleCompanionHistory(id) {
+    const panel = document.getElementById(`hist-${id}`);
+    if (panel.classList.contains('open')) { panel.classList.remove('open'); return; }
+    panel.textContent = 'Loading…';
+    panel.classList.add('open');
+    try {
+      const rows = await api('GET', `/companions/${id}/history`);
+      if (!rows.length) { panel.textContent = 'No drink history yet.'; return; }
+      panel.innerHTML = `<strong style="display:block;margin-bottom:.4rem;color:#aaa">Drinks offered:</strong>` +
+        rows.map(r => `
+          <div class="companion-hist-row">
+            <span style="flex:1">${txt(r.name)}</span>
+            <span class="badge ${txt(r.verdict || 'neutral')}" style="font-size:.72rem">${txt(r.verdict || '—')}</span>
+            <span style="color:#555;font-size:.75rem">${new Date(r.created_at).toLocaleDateString()}</span>
+          </div>`).join('');
+    } catch (e) { panel.textContent = 'Could not load history: ' + e.message; }
   }
 
   document.getElementById('add-companion-btn').addEventListener('click', async () => {
@@ -690,6 +737,64 @@
         ${steps}
         ${verdictRow}
       </div>`;
+  }
+
+  // ── history tab ───────────────────────────────────────────
+  async function loadHistory() {
+    const el = document.getElementById('session-list');
+    const errEl = document.getElementById('history-error');
+    hide(errEl);
+    el.textContent = 'Loading…';
+    try {
+      const sessions = await api('GET', '/sessions?limit=50');
+      if (!sessions.length) {
+        el.innerHTML = '<p class="history-empty">No sessions yet. Make a recommendation to start one.</p>';
+        return;
+      }
+      el.innerHTML = sessions.map(s => {
+        const compIds = (s.session_companions || []).map(sc => sc.companion_id);
+        const compNames = compIds.map(cid => {
+          const c = companions.find(x => x.id === cid);
+          return c ? txt(c.name) : '?';
+        });
+        const date = new Date(s.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        const compStr = compNames.length ? ` · ${compNames.join(', ')}` : '';
+        return `
+          <div class="session-row" data-sid="${txt(s.id)}">
+            <div class="session-row-header">
+              <span class="occasion">${txt(s.occasion)}</span>
+              <span class="meta">${date}${compStr}</span>
+              <span class="meta">${txt(s.mood ? s.mood : '')}</span>
+              <span class="meta" style="color:#555">${s.ended_at ? '✓ ended' : '● active'}</span>
+            </div>
+            <div class="session-row-body" id="session-body-${txt(s.id)}">
+              <p style="color:#aaa;font-size:.82rem">Loading drinks…</p>
+            </div>
+          </div>`;
+      }).join('');
+      el.querySelectorAll('.session-row-header').forEach(header => {
+        header.addEventListener('click', () => toggleSessionBody(header.closest('.session-row').dataset.sid));
+      });
+    } catch (e) { show(errEl, e.message); el.textContent = ''; }
+  }
+
+  async function toggleSessionBody(sid) {
+    const body = document.getElementById(`session-body-${sid}`);
+    if (body.classList.contains('open')) { body.classList.remove('open'); return; }
+    body.classList.add('open');
+    try {
+      const drinks = await api('GET', `/sessions/${sid}/drinks`);
+      if (!drinks.length) { body.innerHTML = '<p style="color:#aaa;font-size:.82rem">No drinks recorded.</p>'; return; }
+      body.innerHTML = drinks.map(d => {
+        const verdict = d.verdict || 'neutral';
+        const vLabel = { liked: '👍', disliked: '👎', neutral: '😐' }[verdict] || '—';
+        return `
+          <div class="session-drink-row">
+            <span class="session-drink-name">${txt(d.name)}</span>
+            <span class="badge ${txt(verdict)}" title="${txt(verdict)}">${vLabel}</span>
+          </div>`;
+      }).join('');
+    } catch (e) { body.innerHTML = `<p style="color:#f87171;font-size:.82rem">${txt(e.message)}</p>`; }
   }
 
 })();

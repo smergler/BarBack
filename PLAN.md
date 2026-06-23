@@ -190,24 +190,26 @@ Goal: replace "ask for JSON + parse + retry" with schema-guaranteed output (Haik
       _6 recommender tests pass; 36 total offline; mock evals all assertions pass._
 - [x] **P4.6 Record** in `RESUME_STORY`; commit.
 
-### P7 — Session history + verdict browser  ·  Status: not started
+### P7 — Session history + verdict browser  ·  Status: done (P7.3 deferred — schema decision pending)
 Goal: let the user review past sessions and manage verdicts for themselves and companions.
-- [ ] **P7.1 Add "History" tab** to the SPA. On load, call `GET /sessions` and render a list:
-      occasion, date, # drinks suggested, # verdicts recorded. Clicking a session expands it.
-- [ ] **P7.2 Expanded session view** — list the session's drinks from `GET /sessions/{id}/drinks`.
-      For each drink show: name, user's verdict badge (liked / not tried / didn't like) if set.
-      Verdicts come from `session_drinks.verdict` (already stored); map values to display labels.
-- [ ] **P7.3 Companion verdicts in session view** — for each session drink, show which companions
-      were in the session (`session_companions`) and allow setting a per-companion verdict inline.
-      This requires a new endpoint or extending `PATCH /session-drinks/{id}/verdict` to accept
-      a `companion_id` (currently only records one verdict per drink — see spec, may need schema change).
-      Decide: separate `companion_drink_verdicts` table vs a JSONB column. Document in `docs/backend-spec.md`.
-- [ ] **P7.4 Companion exposure history** — "What has {companion} been offered?" view. A page/panel
-      per companion showing all drinks they were present for + their verdict on each. Query:
-      `sessions JOIN session_companions JOIN session_drinks` filtered by `companion_id`.
-      Add `GET /companions/{id}/history` endpoint returning `[{session_id, drink_name, verdict}]`.
-- [ ] **P7.5 Tests** — unit tests for any new endpoints; update existing session_drinks tests if
-      the verdict schema changes. **Verify:** `pytest -q` green.
+- [x] **P7.1 Add "History" tab** to the SPA. On tab-click, calls `GET /sessions?limit=50` and renders
+      collapsible session rows: occasion, date, companion names (cross-referenced from loaded companions), active/ended state.
+      _Done._
+- [x] **P7.2 Expanded session view** — clicking a session row fetches `GET /sessions/{id}/drinks`;
+      renders each drink with a verdict emoji badge (👍/😐/👎). No fetches until expanded.
+      _Done._
+- [~] **P7.3 Companion verdicts in session view** — deferred: per-companion verdict requires a new
+      `companion_drink_verdicts` table or JSONB column on `session_drinks`. Design decision not made.
+      Session view currently shows which companions were present (from `session_companions` data already
+      included in `GET /sessions` response). Per-companion rating left for a later schema migration.
+- [x] **P7.4 Companion exposure history** — "History" button added to each companion row in the
+      Companions tab; expands a panel showing all drinks the companion was present for + their verdict.
+      `GET /companions/{id}/history` returns `[{id, session_id, name, verdict, created_at}]`.
+      `db.get_companion_history()` queries `session_companions` then `session_drinks`.
+      _Done: endpoint + DB method + frontend panel._
+- [x] **P7.5 Tests** — 3 new tests for `GET /companions/{id}/history` (happy path, empty, 404).
+      **Verify:** 39 offline tests + 16 companion tests pass.
+      _Done._
 
 ### P8 — Inventory category filtering  ·  Status: not started
 Goal: filter the inventory list by category with a whiskey super-group.

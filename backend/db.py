@@ -179,3 +179,26 @@ class DB:
             .update({"verdict": verdict}).eq("id", drink_id).execute().data
         )
         return rows[0] if rows else None
+
+    # ------------------------------------------------------------------
+    # Companion history
+    # ------------------------------------------------------------------
+
+    def get_companion_history(self, companion_id: str) -> list[dict]:
+        """All drinks from sessions where this companion was present."""
+        sc_rows = (
+            self._sb.table("session_companions")
+            .select("session_id")
+            .eq("companion_id", companion_id)
+            .execute().data
+        )
+        session_ids = [r["session_id"] for r in sc_rows]
+        if not session_ids:
+            return []
+        return (
+            self._sb.table("session_drinks")
+            .select("id, session_id, name, verdict, created_at")
+            .in_("session_id", session_ids)
+            .order("created_at")
+            .execute().data
+        )

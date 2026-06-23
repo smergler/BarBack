@@ -31,7 +31,16 @@ PREF = {
 }
 
 
-def _mock_db(return_list=None, return_one=None, create_return=None, pref_list=None, pref_return=None):
+HISTORY_DRINK = {
+    "id": "d1",
+    "session_id": "s1",
+    "name": "Boulevardier",
+    "verdict": "liked",
+    "created_at": "2026-01-01T00:00:00+00:00",
+}
+
+
+def _mock_db(return_list=None, return_one=None, create_return=None, pref_list=None, pref_return=None, hist_list=None):
     db = MagicMock()
     db.list_companions.return_value = return_list or []
     db.get_companion.return_value = return_one
@@ -41,6 +50,7 @@ def _mock_db(return_list=None, return_one=None, create_return=None, pref_list=No
     db.list_preferences.return_value = pref_list or []
     db.create_preference.return_value = pref_return or PREF
     db.delete_preference.return_value = bool(return_one)
+    db.get_companion_history.return_value = hist_list or []
     return db
 
 
@@ -155,3 +165,28 @@ def test_delete_preference_not_found():
     with _db_override(db):
         resp = client.delete("/companions/c1/preferences/bad-id", headers=AUTH_HEADER)
     assert resp.status_code == 404
+
+
+def test_companion_history_returns_drinks():
+    db = _mock_db(return_one=COMPANION, hist_list=[HISTORY_DRINK])
+    with _db_override(db):
+        resp = client.get("/companions/c1/history", headers=AUTH_HEADER)
+    assert resp.status_code == 200
+    assert resp.json() == [HISTORY_DRINK]
+    db.get_companion_history.assert_called_once_with("c1")
+
+
+def test_companion_history_empty():
+    db = _mock_db(return_one=COMPANION, hist_list=[])
+    with _db_override(db):
+        resp = client.get("/companions/c1/history", headers=AUTH_HEADER)
+    assert resp.status_code == 200
+    assert resp.json() == []
+
+
+def test_companion_history_not_found():
+    db = _mock_db(return_one=None)
+    with _db_override(db):
+        resp = client.get("/companions/bad-id/history", headers=AUTH_HEADER)
+    assert resp.status_code == 404
+    db.get_companion_history.assert_not_called()
