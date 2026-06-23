@@ -75,6 +75,9 @@
     .session-drink-row:last-child { border-bottom: none; }
     .session-drink-name { flex: 1; font-size: .9rem; }
     .history-empty { color: #aaa; font-size: .88rem; margin-top: 1rem; }
+    .filter-bar { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: .75rem; }
+    .filter-chip { padding: .25rem .65rem; border-radius: 999px; border: 1px solid #2d3561; font-size: .78rem; cursor: pointer; background: none; color: #aaa; }
+    .filter-chip.active { background: #e2b96f; color: #1a1a2e; border-color: #e2b96f; font-weight: 600; }
     .companion-hist-panel { margin-top: .5rem; padding: .6rem; background: #0f1628; border-radius: 6px; font-size: .82rem; display: none; }
     .companion-hist-panel.open { display: block; }
     .companion-hist-row { display: flex; gap: .5rem; padding: .25rem 0; border-bottom: 1px solid #1a2040; font-size: .82rem; }
@@ -154,6 +157,21 @@
   <!-- Inventory tab -->
   <div class="tab" id="tab-inventory">
     <h2>My Bar</h2>
+    <div class="filter-bar" id="cat-filter-bar">
+      <button class="filter-chip active" data-cat="all">All</button>
+      <button class="filter-chip" data-cat="whiskey">Whiskey</button>
+      <button class="filter-chip" data-cat="bourbon">Bourbon</button>
+      <button class="filter-chip" data-cat="scotch">Scotch</button>
+      <button class="filter-chip" data-cat="rum">Rum</button>
+      <button class="filter-chip" data-cat="tequila">Tequila</button>
+      <button class="filter-chip" data-cat="mezcal">Mezcal</button>
+      <button class="filter-chip" data-cat="gin">Gin</button>
+      <button class="filter-chip" data-cat="vodka">Vodka</button>
+      <button class="filter-chip" data-cat="liqueur">Liqueur</button>
+      <button class="filter-chip" data-cat="vermouth">Vermouth</button>
+      <button class="filter-chip" data-cat="bitters">Bitters</button>
+      <button class="filter-chip" data-cat="other">Other</button>
+    </div>
     <div class="inline-form">
       <input id="bottle-name" type="text" placeholder="Bottle name (e.g. Four Roses Bourbon)" />
       <input id="bottle-cat" type="text" placeholder="Category (e.g. bourbon)" style="max-width:160px" />
@@ -341,7 +359,31 @@
 
   let bottles = [];
   let bottlePage = 0;
+  let activeFilter = 'all';
   const BOTTLE_PAGE_SIZE = 20;
+
+  // "Whiskey" super-group — categories that count as whiskey
+  const WHISKEY_CATS = new Set(['bourbon', 'scotch', 'rye', 'whiskey', 'irish', 'japanese', 'tennessee']);
+  // Categories that have their own chip
+  const KNOWN_CATS = new Set(['bourbon', 'scotch', 'rum', 'tequila', 'mezcal', 'gin', 'vodka', 'liqueur', 'vermouth', 'bitters']);
+
+  function _matchesFilter(bottle) {
+    const cat = (bottle.category || '').toLowerCase();
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'whiskey') return WHISKEY_CATS.has(cat);
+    if (activeFilter === 'other') return !WHISKEY_CATS.has(cat) && !KNOWN_CATS.has(cat);
+    return cat === activeFilter;
+  }
+
+  document.getElementById('cat-filter-bar').addEventListener('click', e => {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    activeFilter = chip.dataset.cat;
+    bottlePage = 0;
+    renderBottles();
+  });
 
   async function loadInventory() {
     try {
@@ -356,16 +398,18 @@
     const pagEl = document.getElementById('bottle-pagination');
     const infoEl = document.getElementById('bottle-page-info');
 
-    if (!bottles.length) {
-      el.innerHTML = '<p style="color:#aaa;font-size:.88rem">No bottles yet.</p>';
+    const filtered = bottles.filter(_matchesFilter);
+
+    if (!filtered.length) {
+      el.innerHTML = `<p style="color:#aaa;font-size:.88rem">${bottles.length ? 'No bottles match this filter.' : 'No bottles yet.'}</p>`;
       pagEl.style.display = 'none';
       return;
     }
 
-    const totalPages = Math.ceil(bottles.length / BOTTLE_PAGE_SIZE);
+    const totalPages = Math.ceil(filtered.length / BOTTLE_PAGE_SIZE);
     bottlePage = Math.max(0, Math.min(bottlePage, totalPages - 1));
     const start = bottlePage * BOTTLE_PAGE_SIZE;
-    const page = bottles.slice(start, start + BOTTLE_PAGE_SIZE);
+    const page = filtered.slice(start, start + BOTTLE_PAGE_SIZE);
 
     el.innerHTML = page.map(b => `
       <div class="list-item">
@@ -379,7 +423,7 @@
 
     if (totalPages > 1) {
       pagEl.style.display = 'flex';
-      infoEl.textContent = `Page ${bottlePage + 1} of ${totalPages} (${bottles.length} bottles)`;
+      infoEl.textContent = `Page ${bottlePage + 1} of ${totalPages} (${filtered.length}${filtered.length !== bottles.length ? ` of ${bottles.length}` : ''} bottles)`;
       document.getElementById('bottle-prev').disabled = bottlePage === 0;
       document.getElementById('bottle-next').disabled = bottlePage === totalPages - 1;
     } else {
@@ -400,6 +444,9 @@
       await api('POST', '/inventory', { name, category });
       document.getElementById('bottle-name').value = '';
       document.getElementById('bottle-cat').value = '';
+      // Clear filter so new bottle is visible regardless of active chip
+      activeFilter = 'all';
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.cat === 'all'));
       await loadInventory();
     } catch (e) { show(errEl, e.message); }
   });

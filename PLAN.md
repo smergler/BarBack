@@ -211,17 +211,19 @@ Goal: let the user review past sessions and manage verdicts for themselves and c
       **Verify:** 39 offline tests + 16 companion tests pass.
       _Done._
 
-### P8 — Inventory category filtering  ·  Status: not started
+### P8 — Inventory category filtering  ·  Status: done
 Goal: filter the inventory list by category with a whiskey super-group.
-- [ ] **P8.1 Add a category filter bar** above the bottle list in the Inventory tab.
-      Buttons/chips: All · Whiskey (group) · Bourbon · Scotch · Rum · Tequila · Mezcal · Vodka · Liqueur · Vermouth · Bitters · Other.
-      "Whiskey" matches `category IN (bourbon, scotch, rye, whiskey, irish, japanese)`.
-      All others are exact category matches. "Other" catches anything not in the list.
-- [ ] **P8.2 Filter client-side** — filtering operates on the already-loaded `bottles` array (no
-      extra API calls). Update `renderBottles()` to slice from the filtered set; keep pagination
-      working correctly (reset to page 0 on filter change).
-- [ ] **P8.3 Active filter state** — highlight the active filter chip; "All" is default.
-      Persist the filter across pagination; clear it when new bottles are added.
+- [x] **P8.1 Add a category filter bar** above the bottle list: All · Whiskey (group) · Bourbon · Scotch ·
+      Rum · Tequila · Mezcal · Gin · Vodka · Liqueur · Vermouth · Bitters · Other.
+      Whiskey group = `{bourbon, scotch, rye, whiskey, irish, japanese, tennessee}`.
+      Other = anything not in any named chip's category set.
+      _Done; filter bar HTML + CSS chips added._
+- [x] **P8.2 Filter client-side** — `_matchesFilter(bottle)` applied to `bottles` array before pagination.
+      Page reset to 0 on filter change. Filtered count shown in pagination info (e.g. "5 of 23 bottles").
+      _Done._
+- [x] **P8.3 Active filter state** — gold highlight on active chip; All is default.
+      Filter cleared (reset to All) when new bottle is added so new bottle is always visible.
+      _Done._
 
 ### P9 — Per-companion recommendation targeting + evals  ·  Status: not started
 Goal: when companions are present, tag each suggestion with who it's suited for; add eval coverage.
