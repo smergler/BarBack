@@ -48,8 +48,12 @@ def get_current_user(
 
     alg = header.get("alg", "")
 
+    # Asymmetric algorithms (RS256, ES256, PS256, …) → verify via JWKS.
+    # HS256 → verify with shared secret (SUPABASE_JWT_TOKEN).
+    _ASYMMETRIC = {"RS256", "RS384", "RS512", "ES256", "ES384", "ES512", "PS256", "PS384", "PS512"}
+
     try:
-        if alg == "RS256":
+        if alg in _ASYMMETRIC:
             url = os.environ.get("SUPABASE_PROJECT_URL")
             if not url:
                 raise HTTPException(
@@ -60,7 +64,7 @@ def get_current_user(
             payload = jwt.decode(
                 token,
                 signing_key.key,
-                algorithms=["RS256"],
+                algorithms=list(_ASYMMETRIC),
                 audience="authenticated",
             )
         elif alg == "HS256":
