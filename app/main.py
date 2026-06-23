@@ -56,6 +56,11 @@ app.include_router(sessions.router)
 app.include_router(session_drinks.router)
 
 
+@app.get("/health")
+def health() -> dict:
+    return {"status": "ok"}
+
+
 @app.get("/config")
 def get_config() -> dict:
     """Public config for the frontend — safe (anon/public keys only)."""
