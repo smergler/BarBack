@@ -34,4 +34,14 @@ jobs:
 
     steps:
       - name: Trigger Railway redeploy
-        run: curl -s -X POST "${{ secrets.RAILWAY_DEPLOY_HOOK_URL }}"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
+          RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_ENVIRONMENT_ID }}
+        run: |
+          PAYLOAD=$(printf '{"query":"mutation{serviceInstanceRedeploy(serviceId:\"%s\",environmentId:\"%s\")}"}' \
+            "$RAILWAY_SERVICE_ID" "$RAILWAY_ENVIRONMENT_ID")
+          curl -sf -X POST https://backboard.railway.app/graphql/v2 \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD"
