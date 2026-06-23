@@ -112,7 +112,7 @@ def recommend_drinks(
         session = db.create_session(
             occasion=req.occasion,
             mood=req.mood,
-            companion_ids=[],  # companion names only in v1; IDs come in P6.10 frontend
+            companion_ids=req.companion_ids,
         )
     session_id: str | None = session.get("id")
     if session_id is None:

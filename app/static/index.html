@@ -120,6 +120,14 @@
           <option value="3">3</option>
         </select>
       </div>
+      <div class="form-row" id="companion-picker-row" style="display:none">
+        <label>Who's drinking with you? <span style="color:#555;font-size:.79rem">(optional)</span></label>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <select id="companion-select" style="flex:1"><option value="">— add a companion —</option></select>
+          <button type="button" class="btn btn-sm btn-ghost" id="add-session-companion-btn">Add</button>
+        </div>
+        <div id="session-companions" style="margin-top:.4rem;display:flex;flex-direction:column;gap:.4rem"></div>
+      </div>
       <button class="btn" type="submit" id="rec-btn">Suggest</button>
     </form>
     <div id="rec-error" class="error-msg"></div>
@@ -415,6 +423,7 @@
     try {
       companions = await api('GET', '/companions');
       renderCompanions();
+      populateCompanionSelect();
     } catch (e) { /* silently retry later */ }
   }
 
@@ -455,18 +464,105 @@
     } catch (e) { show(document.getElementById('comp-error'), e.message); }
   }
 
+  async function renderPrefs(id) {
+    const el = document.getElementById(`prefs-${id}`);
+    const prefs = await api('GET', `/companions/${id}/preferences`);
+    const badgeHtml = prefs.length
+      ? prefs.map(p => `
+          <span class="badge ${txt(p.type)}" style="margin:.2rem;display:inline-flex;align-items:center;gap:.3rem">
+            ${txt(p.type)}: ${txt(p.value)}
+            <button type="button" data-pid="${txt(p.id)}" data-cid="${txt(id)}"
+              style="background:none;border:none;color:inherit;cursor:pointer;line-height:1;font-size:.9rem;padding:0">×</button>
+          </span>`).join('')
+      : '<span style="color:#aaa;font-size:.82rem;display:block;margin-bottom:.4rem">No preferences yet.</span>';
+    el.innerHTML = `
+      <div style="margin-bottom:.4rem">${badgeHtml}</div>
+      <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin-top:.35rem">
+        <select data-ptype style="width:90px;font-size:.82rem">
+          <option value="like">like</option>
+          <option value="dislike">dislike</option>
+        </select>
+        <input type="text" data-pval placeholder="e.g. peaty scotch" style="flex:1;min-width:120px;font-size:.82rem" />
+        <button type="button" class="btn btn-sm btn-ghost" data-padd>Add</button>
+      </div>`;
+    el.querySelectorAll('[data-pid]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await api('DELETE', `/companions/${btn.dataset.cid}/preferences/${btn.dataset.pid}`);
+        await renderPrefs(btn.dataset.cid);
+      });
+    });
+    el.querySelector('[data-padd]').addEventListener('click', async () => {
+      const type  = el.querySelector('[data-ptype]').value;
+      const value = el.querySelector('[data-pval]').value.trim();
+      if (!value) return;
+      try {
+        await api('POST', `/companions/${id}/preferences`, { type, value });
+        el.querySelector('[data-pval]').value = '';
+        await renderPrefs(id);
+      } catch (e) { /* duplicate — silently ignore */ }
+    });
+  }
+
   async function togglePrefs(id) {
     const el = document.getElementById(`prefs-${id}`);
     if (el.style.display === 'none') {
-      const prefs = await api('GET', `/companions/${id}/preferences`);
-      el.innerHTML = prefs.length
-        ? prefs.map(p => `<span class="badge ${txt(p.type)}" style="margin:.2rem">${txt(p.type)}: ${txt(p.value)}</span>`).join('')
-        : '<span style="color:#aaa;font-size:.82rem">No preferences yet — they are learned from drink verdicts.</span>';
+      await renderPrefs(id);
       el.style.display = 'block';
     } else {
       el.style.display = 'none';
     }
   }
+
+  // ── companion picker (recommend tab) ──────────────────────
+  let sessionCompanions = []; // [{id, name, seedLikes}]
+
+  function populateCompanionSelect() {
+    const sel = document.getElementById('companion-select');
+    const row = document.getElementById('companion-picker-row');
+    if (!companions.length) { row.style.display = 'none'; return; }
+    row.style.display = '';
+    const usedIds = new Set(sessionCompanions.map(c => c.id));
+    sel.innerHTML = '<option value="">— add a companion —</option>' +
+      companions.filter(c => !usedIds.has(c.id))
+        .map(c => `<option value="${txt(c.id)}">${txt(c.name)}</option>`).join('');
+  }
+
+  function renderSessionCompanions() {
+    const el = document.getElementById('session-companions');
+    el.innerHTML = sessionCompanions.map((c, i) => `
+      <div style="background:#16213e;border:1px solid #2d3561;border-radius:8px;padding:.5rem .75rem">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem">
+          <span style="font-size:.9rem;color:#e2b96f;font-weight:600">${txt(c.name)}</span>
+          <button type="button" class="btn btn-sm btn-danger" style="margin-left:auto;padding:.2rem .5rem" data-ri="${i}">×</button>
+        </div>
+        <label style="font-size:.78rem;color:#888;display:block;margin-bottom:.25rem">Seed likes for this session (comma-separated, optional):</label>
+        <input type="text" placeholder="peaty scotch, citrus drinks…" data-seed="${i}"
+          value="${txt(c.seedLikes)}" style="font-size:.82rem" />
+      </div>`).join('');
+    el.querySelectorAll('[data-ri]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        sessionCompanions.splice(Number(btn.dataset.ri), 1);
+        renderSessionCompanions();
+        populateCompanionSelect();
+      });
+    });
+    el.querySelectorAll('[data-seed]').forEach(input => {
+      input.addEventListener('input', () => {
+        sessionCompanions[Number(input.dataset.seed)].seedLikes = input.value;
+      });
+    });
+  }
+
+  document.getElementById('add-session-companion-btn').addEventListener('click', () => {
+    const sel = document.getElementById('companion-select');
+    const id = sel.value;
+    if (!id) return;
+    const comp = companions.find(c => c.id === id);
+    if (!comp || sessionCompanions.find(c => c.id === id)) return;
+    sessionCompanions.push({ id: comp.id, name: comp.name, seedLikes: '' });
+    renderSessionCompanions();
+    populateCompanionSelect();
+  });
 
   // ── recommend ──────────────────────────────────────────────
   let currentSessionId = null;
@@ -482,10 +578,22 @@
     hide(errEl);
     document.getElementById('results').innerHTML = '';
 
+    // Build companion profiles: fetch saved prefs + merge one-time seed likes
+    const companions_payload = await Promise.all(sessionCompanions.map(async c => {
+      let prefs = [];
+      try { prefs = await api('GET', `/companions/${c.id}/preferences`); } catch {}
+      const likes    = prefs.filter(p => p.type === 'like').map(p => p.value);
+      const dislikes = prefs.filter(p => p.type === 'dislike').map(p => p.value);
+      c.seedLikes.split(',').map(s => s.trim()).filter(Boolean).forEach(l => likes.push(l));
+      return { name: c.name, likes, dislikes };
+    }));
+
     const body = {
       occasion,
       mood:  document.getElementById('mood').value.trim() || undefined,
       count: Number(document.getElementById('count').value),
+      companions:     companions_payload,
+      companion_ids:  sessionCompanions.map(c => c.id),
     };
 
     const controller = new AbortController();

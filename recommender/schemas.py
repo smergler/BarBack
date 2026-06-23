@@ -53,5 +53,6 @@ class RecommendRequest(BaseModel):
     count: int = Field(3, ge=1, le=10)
     constraints: list[str] = Field(default_factory=list)
     companions: list[CompanionProfile] = Field(default_factory=list)
+    companion_ids: list[str] = Field(default_factory=list)
     # Fresh ingredients the user confirms they have on hand right now.
     available_perishables: list[str] = Field(default_factory=list)
