@@ -33,11 +33,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Trigger Railway redeploy
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ vars.RAILWAY_PROJECT_ID }}
-          RAILWAY_SERVICE_ID: ${{ vars.RAILWAY_SERVICE_ID }}
-        run: |
-          npm install -g @railway/cli --quiet
-          railway redeploy --service "$RAILWAY_SERVICE_ID" --yes
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push main → production branch
+        run: git push origin HEAD:production
