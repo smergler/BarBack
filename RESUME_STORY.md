@@ -205,6 +205,32 @@ and relevant error paths (404, 409, 422).
 
 **Interview line:** "I moved from 'ask for JSON and hope' to `output_config.format` — the API won't return a response that violates the schema. The retry loop still exists for mock/legacy clients, but the live path eliminated an entire failure mode."
 
+## Multi-model sweep (P1 — completed)
+
+**Goal:** measure whether spending more on a bigger model actually improves recommendation quality.
+
+**Method:** `evals/sweep.py` ran all 14 eval scenarios through each model and recorded grounding%, makeable-now%, token counts, and cost. Judge skipped (offline-equivalent — same scenarios as the live judge run above).
+
+| Model | Grounding | Make-now | Input tok | Output tok | Cost | Time |
+|---|---|---|---|---|---|---|
+| `claude-haiku-4-5-20251001` | **100%** | **84%** | 16,352 | 6,388 | **$0.0483** | 85.9s |
+| `claude-sonnet-4-6` | 91% | 58% | 16,366 | 7,701 | $0.1646 | 157.9s |
+| `claude-opus-4-8` | 91% | 58% | 20,961 | 9,497 | $0.3422 | 138.8s |
+
+**Decision: stay on Haiku.** It wins on every measured dimension:
+- Grounding: 100% vs 91% — the smaller model is *more* honest about ownership, not less.
+- Make-now: 84% vs 58% — the bigger models over-specify. They suggest exotic ingredients (rum, curaçao, Aperol) even in constrained scenarios, producing grounded-but-not-makeable outputs. Haiku stays closer to what's actually in the bar.
+- Cost: Haiku is 3.4× cheaper than Sonnet, 7.1× cheaper than Opus. No quality trade-off to compensate.
+- Output tokens: Opus used 9,497 vs 6,388 for Haiku — 49% more tokens for worse make-now scores. Verbose ≠ accurate on this task.
+
+**The insight worth articulating:** bigger models aren't always better — task shape matters. This is a constraint-satisfaction problem (use what's in inventory), not a creative writing or reasoning problem. Haiku, being more "literal," respects the constraints better; Sonnet and Opus pattern-match to "good cocktail recipes" and overreach. The eval harness is what revealed this — without it, the obvious call would be "use the best model."
+
+**Engineering note:** one bug caught during sweep implementation — Opus 4.8+ rejects the `temperature` parameter (deprecated). Fixed by adding `_MODELS_WITHOUT_TEMPERATURE` frozenset and `_base_params()` helper that conditionally omits it. This is exactly the kind of silent breaking change a sweep harness catches automatically.
+
+**Interview line:** "The sweep showed Haiku outperforms Opus on this task — it's both cheaper and better. Bigger models over-specify; they suggest great cocktails that need ingredients you don't own. Without the eval harness I wouldn't have known — the obvious engineering choice is always 'use the best model.'"
+
+---
+
 ## Open decisions / next steps
 
 - [x] **Pantry boundary:** decided — honey/cinnamon stay as legitimate "grab these"
