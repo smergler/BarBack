@@ -169,6 +169,44 @@ MOCK_RESPONSES: dict[str, str] = {
    "why":"Mock fakes rum/curacao as owned and orgeat as pantry."}
 ]}""",
 
+    # --- P9 companion targeting scenarios (clean) ---
+
+    # Two drinks targeted at opposite preferences; suited_for uses only "me", "Alex", "Sam".
+    "companion_smoke_sweet": """
+{"suggestions":[
+  {"name":"Mezcal Negroni","description":"Smoky and bitter.",
+   "ingredients":[
+     {"name":"Del Maguey Vida Mezcal","quantity":"1 oz","source":"inventory"},
+     {"name":"Campari","quantity":"1 oz","source":"inventory"},
+     {"name":"Carpano Antica Sweet Vermouth","quantity":"1 oz","source":"inventory"},
+     {"name":"orange peel","quantity":"1","source":"perishable"}],
+   "steps":["Stir with ice","Strain over a large cube"],
+   "why":"Smoky and bitter — perfect for Alex who dislikes sweet.",
+   "suited_for":["Alex"]},
+  {"name":"Cointreau Sour","description":"Bright, citrusy and sweet.",
+   "ingredients":[
+     {"name":"Cointreau","quantity":"1.5 oz","source":"inventory"},
+     {"name":"lemon juice","quantity":"0.75 oz","source":"perishable"},
+     {"name":"simple syrup","quantity":"0.5 oz","source":"pantry"},
+     {"name":"egg white","quantity":"1","source":"perishable"}],
+   "steps":["Dry shake","Shake with ice","Strain"],
+   "why":"Sweet and fruity — exactly what Sam loves.",
+   "suited_for":["Sam","me"]}
+]}""",
+
+    # Single companion drink, suited_for uses only "me" and "Jamie".
+    "companion_bitter_only": """
+{"suggestions":[
+  {"name":"Campari Spritz","description":"Bitter and refreshing.",
+   "ingredients":[
+     {"name":"Campari","quantity":"2 oz","source":"inventory"},
+     {"name":"soda water","quantity":"3 oz","source":"pantry"},
+     {"name":"orange peel","quantity":"1","source":"perishable"}],
+   "steps":["Build in a glass","Stir gently"],
+   "why":"Classic bitter aperitivo — exactly Jamie's style.",
+   "suited_for":["Jamie","me"]}
+]}""",
+
     # Drinks 1-3 grounded; drinks 4-5 pad with faked bottles.
     "high_count_pad": """
 {"suggestions":[

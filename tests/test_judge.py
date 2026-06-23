@@ -116,3 +116,50 @@ def test_summary_name_accuracy_rate_none_when_all_absent():
     ])
     assert s.name_accuracy_rate is None
     assert s.name_accuracy_n == 0
+
+
+def test_companion_targeting_parses():
+    resp = '{"constraints_respected": true, "occasion_fit": 4, "recipe_plausibility": 4, "companion_targeting": 5, "notes": "well targeted"}'
+    v = judge_suggestion(SUGG, REQ, SequenceClient(resp))
+    assert v.companion_targeting == 5
+
+
+def test_companion_targeting_none_when_absent():
+    v = judge_suggestion(SUGG, REQ, SequenceClient(PASS))
+    assert v.companion_targeting is None
+
+
+def test_summary_companion_targeting_avg():
+    s = summarize([
+        JudgeVerdict(constraints_respected=True, occasion_fit=5, recipe_plausibility=5, companion_targeting=4),
+        JudgeVerdict(constraints_respected=True, occasion_fit=4, recipe_plausibility=4, companion_targeting=2),
+        JudgeVerdict(constraints_respected=True, occasion_fit=3, recipe_plausibility=3),  # no targeting
+    ])
+    assert s.avg_companion_targeting == 3.0
+    assert s.companion_targeting_n == 2
+
+
+def test_summary_companion_targeting_none_when_all_absent():
+    s = summarize([
+        JudgeVerdict(constraints_respected=True, occasion_fit=4, recipe_plausibility=5),
+    ])
+    assert s.avg_companion_targeting is None
+    assert s.companion_targeting_n == 0
+
+
+def test_prompt_includes_companion_profiles():
+    req = RecommendRequest(
+        occasion="hangout",
+        companions=[CompanionProfile(name="Alex", likes=["smoky"], dislikes=["sweet"])],
+    )
+    sugg = Suggestion(
+        name="Mezcal Negroni",
+        description="Smoky and bitter",
+        ingredients=[Ingredient(name="Mezcal", quantity="1 oz", source=IngredientSource.inventory)],
+        suited_for=["Alex"],
+    )
+    p = build_judge_prompt(sugg, req)
+    assert "Alex" in p
+    assert "smoky" in p
+    assert "sweet" in p
+    assert "suited_for" in p.lower() or "Suited for" in p

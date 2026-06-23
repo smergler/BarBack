@@ -83,6 +83,14 @@ def main() -> None:
             property_failures.append(
                 f"{sc.id}: grounding {report.rate:.0%} < expected {sc.expect_min_grounded_rate:.0%}"
             )
+        if sc.check_suited_for:
+            valid_names = {"me"} | {c.name for c in sc.request.companions}
+            for s in rec.suggestions:
+                for name in s.suited_for:
+                    if name not in valid_names:
+                        property_failures.append(
+                            f"{sc.id} '{s.name}': suited_for contains unknown name '{name}'"
+                        )
 
         if sc.open_ended:
             mk = makeable_mod.score(rec.suggestions, sc.inventory)
@@ -108,12 +116,17 @@ def main() -> None:
             f"{js.name_accuracy_rate:.0%} ({js.name_accuracy_n}/{js.n})"
             if js.name_accuracy_rate is not None else "n/a"
         )
+        comp_tgt = (
+            f"{js.avg_companion_targeting:.1f}/5 ({js.companion_targeting_n} scored)"
+            if js.avg_companion_targeting is not None else "n/a (no companion scenarios)"
+        )
         print(
             f"JUDGE ({js.n} suggestions): "
             f"constraints respected {js.constraint_pass_rate:.0%}, "
             f"occasion fit {js.avg_occasion_fit:.1f}/5, "
             f"recipe plausibility {js.avg_recipe_plausibility:.1f}/5, "
-            f"name accuracy {name_acc}"
+            f"name accuracy {name_acc}, "
+            f"companion targeting {comp_tgt}"
         )
 
     if property_failures:

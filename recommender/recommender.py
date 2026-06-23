@@ -40,6 +40,7 @@ RECOMMENDATION_SCHEMA: dict = {
                     },
                     "steps": {"type": "array", "items": {"type": "string"}},
                     "why": {"type": "string"},
+                    "suited_for": {"type": "array", "items": {"type": "string"}},
                 },
                 "required": ["name", "description", "ingredients"],
                 "additionalProperties": False,

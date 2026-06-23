@@ -36,6 +36,8 @@ class Scenario:
     expect_count: int | None = None
     # True = open-ended request; False = user demanded a specific classic (accepts a shopping list)
     open_ended: bool = True
+    # If True, assert suited_for only contains "me" or companion names from the request.
+    check_suited_for: bool = False
 
 
 SCENARIOS: list[Scenario] = [
@@ -166,5 +168,37 @@ SCENARIOS: list[Scenario] = [
         inventory=SMALL,  # bourbon, rye, mezcal
         request=RecommendRequest(occasion="casual evening", mood="surprise me", count=5),
         note="5 drinks from 3 bottles — does it invent bottles to hit the count?",
+    ),
+    # --- P9 companion targeting scenarios ---
+    Scenario(
+        id="companion_smoke_sweet",
+        inventory=INVENTORY,
+        request=RecommendRequest(
+            occasion="backyard hangout",
+            count=2,
+            companions=[
+                CompanionProfile(name="Alex", likes=["smoky", "mezcal"], dislikes=["sweet"]),
+                CompanionProfile(name="Sam", likes=["sweet", "fruity"], dislikes=["bitter"]),
+            ],
+        ),
+        note="Two companions with opposite preferences — suited_for should split correctly.",
+        expect_count=2,
+        check_suited_for=True,
+        open_ended=True,
+    ),
+    Scenario(
+        id="companion_bitter_only",
+        inventory=INVENTORY,
+        request=RecommendRequest(
+            occasion="aperitivo hour",
+            count=1,
+            companions=[
+                CompanionProfile(name="Jamie", likes=["bitter", "amaro"], dislikes=["sweet", "fruity"]),
+            ],
+        ),
+        note="Single companion who dislikes sweet — suited_for should not name invented people.",
+        expect_count=1,
+        check_suited_for=True,
+        open_ended=True,
     ),
 ]

@@ -768,6 +768,10 @@
     const steps = s.steps.length
       ? `<ol class="steps">${s.steps.map(t => `<li>${txt(t)}</li>`).join('')}</ol>`
       : '';
+    const suitedFor = (s.suited_for || []);
+    const suitedHtml = suitedFor.length
+      ? `<p style="font-size:.78rem;color:#aaa;margin-bottom:.5rem">For: ${suitedFor.map(n => `<span class="badge">${txt(n)}</span>`).join(' ')}</p>`
+      : '';
     const didStr = drinkId ? `data-drink-id="${txt(drinkId)}"` : '';
     const av = activeVerdict;
     const verdictRow = `
@@ -780,6 +784,7 @@
       <div class="card">
         <h3>${txt(s.name)}</h3>
         <p class="why">${txt(s.why || s.description || '')}</p>
+        ${suitedHtml}
         <ul class="ingredients">${ings}</ul>
         ${steps}
         ${verdictRow}

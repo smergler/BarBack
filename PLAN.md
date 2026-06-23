@@ -225,23 +225,29 @@ Goal: filter the inventory list by category with a whiskey super-group.
       Filter cleared (reset to All) when new bottle is added so new bottle is always visible.
       _Done._
 
-### P9 — Per-companion recommendation targeting + evals  ·  Status: not started
+### P9 — Per-companion recommendation targeting + evals  ·  Status: done
 Goal: when companions are present, tag each suggestion with who it's suited for; add eval coverage.
-- [ ] **P9.1 Extend `Suggestion` schema** — add `suited_for: list[str]` (companion names + "me")
-      populated by the LLM. The LLM receives companion profiles and, for each suggestion, names
-      who it expects to enjoy it based on their likes/dislikes.
-- [ ] **P9.2 Update the system prompt** in `recommender/context.py` to instruct the model to fill
-      `suited_for` when companions are present; empty list = suits everyone or no companions.
-- [ ] **P9.3 Render `suited_for` in the frontend** — small chips below each suggestion card:
-      "For: you, Alice" in the card's recommendation text.
-- [ ] **P9.4 Add eval scenarios with companions** — add 2–3 fixtures to `evals/fixtures.py` that
-      include `companions` with known likes/dislikes. Add a mock response and a property assertion:
-      `suited_for` must only name companions (or "me"), not invent new people.
-- [ ] **P9.5 Add a `companion_targeting` judge dimension** — extend `JudgeVerdict` in `evals/judge.py`
-      with `companion_targeting: float | None` (1–5: does the `suited_for` tagging match the
-      companion profiles?). Update `JUDGE_SYSTEM`, add unit test, re-run judge live. Record in
-      `RESUME_STORY.md`.
-- [ ] **P9.6 Tests** — update `test_recommender.py` to cover `suited_for` field; `pytest -q` green.
+- [x] **P9.1 Extend `Suggestion` schema** — `suited_for: list[str]` added to `recommender/schemas.py`;
+      `RECOMMENDATION_SCHEMA` updated with the new field in `recommender/recommender.py`.
+      _Done._
+- [x] **P9.2 Update the system prompt** — `recommender/context.py` instructs the model to populate
+      `suited_for` with exact companion names + "me"; empty list = suits everyone.
+      _Done._
+- [x] **P9.3 Render `suited_for` in the frontend** — chips below each card: "For: Alex Sam".
+      _Done in `app/static/index.html` → `renderCard()`._
+- [x] **P9.4 Add eval scenarios with companions** — `companion_smoke_sweet` (two companions with
+      opposite profiles) and `companion_bitter_only` (single companion) added to `evals/fixtures.py`.
+      `check_suited_for: True` property: asserts all names are "me" or a companion name.
+      Mock responses added to `evals/mock_responses.py` with correct `suited_for` values.
+      _All 14 scenarios pass assertions._
+- [x] **P9.5 Add `companion_targeting` judge dimension** — `JudgeVerdict.companion_targeting: int | None`
+      (1–5, omitted when no companions). `JudgeSummary.avg_companion_targeting` + `companion_targeting_n`.
+      `build_judge_prompt()` now includes companion likes/dislikes and `suited_for` in the prompt.
+      `run_evals.py` prints companion targeting score when available.
+      _5 new judge tests pass._
+- [x] **P9.6 Tests** — 5 new judge tests (companion_targeting parses, none when absent, summary avg,
+      none when all absent, prompt includes profiles). 57 offline tests + mock evals pass.
+      _Done._
 
 ### P10 — Recommendation telemetry on sessions  ·  Status: not started
 Goal: capture token cost, latency, and bar size per recommend call. Most identifying

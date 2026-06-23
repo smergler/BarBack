@@ -28,6 +28,7 @@ class Suggestion(BaseModel):
     ingredients: list[Ingredient]
     steps: list[str] = Field(default_factory=list)
     why: str = ""
+    suited_for: list[str] = Field(default_factory=list)
 
 
 class Recommendation(BaseModel):

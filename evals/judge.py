@@ -28,8 +28,12 @@ its listed ingredients don't match that classic's canonical recipe (e.g. called 
 drink has an invented or creative name, set name_accurate to true unless the
 description explicitly claims it is a classic it clearly is not.
 
+If companions are listed, score companion_targeting 1-5: does the suited_for list
+correctly match each companion's likes/dislikes? (5 = perfectly targeted, 1 = clearly
+wrong). If no companions are present, omit companion_targeting entirely.
+
 Respond with ONLY this JSON, no prose:
-{"constraints_respected": true|false, "occasion_fit": 1-5, "recipe_plausibility": 1-5, "name_accurate": true|false, "notes": "one sentence"}"""
+{"constraints_respected": true|false, "occasion_fit": 1-5, "recipe_plausibility": 1-5, "name_accurate": true|false, "companion_targeting": 1-5 or omit, "notes": "one sentence"}"""
 
 
 class JudgeError(Exception):
@@ -41,6 +45,7 @@ class JudgeVerdict(BaseModel):
     occasion_fit: int = Field(ge=1, le=5)
     recipe_plausibility: int = Field(ge=1, le=5)
     name_accurate: bool | None = None  # None = judge omitted the field; excluded from name_accuracy_rate
+    companion_targeting: int | None = Field(None, ge=1, le=5)  # None when no companions present
     notes: str = ""
 
 
@@ -50,9 +55,14 @@ def build_judge_prompt(suggestion: Suggestion, request: RecommendRequest) -> str
         lines.append(f"Mood/vibe: {request.mood}")
     if request.constraints:
         lines.append("Constraints (must be respected): " + "; ".join(request.constraints))
-    dislikes = [d for c in request.companions for d in c.dislikes]
-    if dislikes:
-        lines.append("Companion dislikes (avoid): " + ", ".join(sorted(set(dislikes))))
+    if request.companions:
+        for c in request.companions:
+            parts = []
+            if c.likes:
+                parts.append("likes: " + ", ".join(c.likes))
+            if c.dislikes:
+                parts.append("dislikes: " + ", ".join(c.dislikes))
+            lines.append(f"Companion {c.name}: {'; '.join(parts) or 'no stated preferences'}")
 
     lines.append(f"\nSuggestion: {suggestion.name}")
     lines.append(f"Description: {suggestion.description}")
@@ -61,6 +71,8 @@ def build_judge_prompt(suggestion: Suggestion, request: RecommendRequest) -> str
     ))
     if suggestion.steps:
         lines.append("Method: " + " ".join(suggestion.steps))
+    if suggestion.suited_for:
+        lines.append("Suited for: " + ", ".join(suggestion.suited_for))
     return "\n".join(lines)
 
 
@@ -128,6 +140,18 @@ class JudgeSummary:
     @property
     def name_accuracy_n(self) -> int:
         return sum(1 for v in self.verdicts if v.name_accurate is not None)
+
+    @property
+    def avg_companion_targeting(self) -> float | None:
+        """Average companion_targeting score; None if no verdicts include the dimension."""
+        assessed = [v for v in self.verdicts if v.companion_targeting is not None]
+        if not assessed:
+            return None
+        return sum(v.companion_targeting for v in assessed) / len(assessed)
+
+    @property
+    def companion_targeting_n(self) -> int:
+        return sum(1 for v in self.verdicts if v.companion_targeting is not None)
 
 
 def summarize(verdicts: list[JudgeVerdict]) -> JudgeSummary:
