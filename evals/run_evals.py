@@ -28,6 +28,8 @@ from evals.tracing import DEFAULT_TRACE_PATH, TraceRecord, write as trace_write
 from recommender.llm import AnthropicClient, MockClient
 from recommender.recommender import recommend
 
+JUDGE_MODEL = "claude-haiku-4-5-20251001"
+
 
 def _suggestion_hash(suggestion) -> str:
     """Stable 8-char hash of sorted ingredient names+sources — recipe identity."""
@@ -164,18 +166,19 @@ def main() -> None:
             mk_now += mk.makeable_now_count
 
         if args.live and args.judge:
+            judge_llm = AnthropicClient(model=JUDGE_MODEL)
             for s in rec.suggestions:
                 _jt0 = time.perf_counter()
-                verdict = judge_suggestion(s, sc.request, llm)
+                verdict = judge_suggestion(s, sc.request, judge_llm)
                 _jelapsed_ms = int((time.perf_counter() - _jt0) * 1000)
                 all_tagged.append(TaggedVerdict(sc.id, s.name, _suggestion_hash(s), verdict))
-                if args.trace and hasattr(llm, "last_usage") and llm.last_usage:
+                if args.trace and hasattr(judge_llm, "last_usage") and judge_llm.last_usage:
                     trace_write(TraceRecord(
                         ts=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                        model=llm._model,
+                        model=judge_llm._model,
                         scenario_id=sc.id,
-                        input_tokens=llm.last_usage.input_tokens,
-                        output_tokens=llm.last_usage.output_tokens,
+                        input_tokens=judge_llm.last_usage.input_tokens,
+                        output_tokens=judge_llm.last_usage.output_tokens,
                         latency_ms=_jelapsed_ms,
                         call_type="judge",
                     ), path=Path(args.trace))
@@ -200,7 +203,7 @@ def main() -> None:
             if js.avg_companion_targeting is not None else "n/a (no companion scenarios)"
         )
         print(
-            f"JUDGE ({js.n} suggestions): "
+            f"JUDGE (pinned: {JUDGE_MODEL}, {js.n} suggestions): "
             f"constraints respected {js.constraint_pass_rate:.0%}, "
             f"occasion fit {js.avg_occasion_fit:.1f}/5, "
             f"recipe plausibility {js.avg_recipe_plausibility:.1f}/5, "

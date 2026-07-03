@@ -118,10 +118,10 @@
 
 **Produces:** The LLM judge always runs on one fixed model regardless of the candidate model being evaluated, removing self-preference bias from `run_evals` and making `sweep` judge columns comparable across rows.
 
-- [ ] **5.1 Add a fixed judge model constant + wiring in `evals/run_evals.py`.**
+- [x] **5.1 Add a fixed judge model constant + wiring in `evals/run_evals.py`.**
       Introduce `JUDGE_MODEL = "claude-haiku-4-5-20251001"` (or a `--judge-model` arg defaulting to it). In the `--judge` branch, build a *separate* `AnthropicClient(model=JUDGE_MODEL)` for judging instead of reusing the candidate `llm`. The recommend call keeps using the candidate model; only judging is pinned.
 
-- [ ] **5.2 Do the same in `evals/sweep.py`.**
+- [x] **5.2 Do the same in `evals/sweep.py`.**
       `run_model` currently builds `judge_llm = AnthropicClient(model=model_id)` — change it to the pinned `JUDGE_MODEL` so judge scores are identical-basis across swept models. Add a note in the printed output/header that the judge is pinned.
       depends on: 5.1
 
