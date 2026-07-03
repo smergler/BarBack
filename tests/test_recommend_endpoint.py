@@ -36,13 +36,14 @@ SESSION = {"id": "s1", "occasion": "movie night", "mood": None,
 
 
 @contextlib.contextmanager
-def _mocked(bottles=None, active_session=None):
+def _mocked(bottles=None, active_session=None, companion_ids=None):
     """Override auth and DB for recommend endpoint tests."""
     mock_db = MagicMock()
     mock_db.list_bottles.return_value = bottles if bottles is not None else [BOTTLE]
     mock_db.get_active_session.return_value = active_session
     mock_db.create_session.return_value = SESSION
     mock_db.create_session_drinks.return_value = []
+    mock_db.list_companion_ids.return_value = set(companion_ids) if companion_ids is not None else set()
 
     app.dependency_overrides[get_current_user] = lambda: "user-1"
     with patch("app.main.DB", return_value=mock_db), \
@@ -126,4 +127,28 @@ def test_recommend_telemetry_failure_is_nonfatal():
          patch("app.main.AnthropicClient", return_value=mock_llm):
         db.update_session_telemetry.side_effect = Exception("DB exploded")
         resp = client.post("/recommend", json={"occasion": "movie night"}, headers=AUTH_HEADER)
+    assert resp.status_code == 200
+
+
+def test_recommend_rejects_foreign_companion():
+    """companion_ids not owned by caller returns 400 before session is created."""
+    with _mocked(companion_ids=["c1"]) as db:
+        resp = client.post(
+            "/recommend",
+            json={"occasion": "movie night", "companion_ids": ["c-foreign"]},
+            headers=AUTH_HEADER,
+        )
+    assert resp.status_code == 400
+    assert "not yours" in resp.json()["detail"]
+    db.create_session.assert_not_called()
+
+
+def test_recommend_accepts_owned_companion():
+    """companion_ids all owned → proceeds to 200."""
+    with _mocked(companion_ids=["c1"]) as db:
+        resp = client.post(
+            "/recommend",
+            json={"occasion": "movie night", "companion_ids": ["c1"]},
+            headers=AUTH_HEADER,
+        )
     assert resp.status_code == 200

@@ -92,9 +92,6 @@ def recommend_drinks(
 
     db = DB(creds.credentials)
 
-    # Validate companion ownership if profiles were provided by name
-    # (Future: accept companion_ids; for now trust CompanionProfile names from request)
-
     # Fetch real inventory from DB
     db_bottles = db.list_bottles(include_inactive=False, limit=1000, offset=0)
     if not db_bottles:
@@ -104,6 +101,13 @@ def recommend_drinks(
         Bottle(id=b["id"], name=b["name"], category=b["category"], subcategory=b.get("subcategory"))
         for b in db_bottles
     ]
+
+    # Reject companion IDs that don't belong to the authenticated user.
+    if req.companion_ids:
+        owned = db.list_companion_ids()
+        foreign = [cid for cid in req.companion_ids if cid not in owned]
+        if foreign:
+            raise HTTPException(status_code=400, detail="One or more companion IDs are not yours")
 
     # Get or create the active session before recommend() so we can fetch
     # prior drinks and pass them as context (deduplication + in-session feedback).

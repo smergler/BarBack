@@ -56,13 +56,13 @@
 
 **Produces:** `/recommend` rejects `companion_ids` that don't belong to the authenticated user with a 400 before any session is created — implementing the guard the backend spec declares mandatory but the code never had.
 
-- [ ] **2.1 Add `list_companion_ids()` helper to `backend/db.py`** — returns the set of the current user's companion IDs: `{r["id"] for r in self._sb.table("companions").select("id").execute().data}`. RLS already scopes this to the user. One method, no business logic.
+- [x] **2.1 Add `list_companion_ids()` helper to `backend/db.py`** — returns the set of the current user's companion IDs: `{r["id"] for r in self._sb.table("companions").select("id").execute().data}`. RLS already scopes this to the user. One method, no business logic.
 
-- [ ] **2.2 Add the ownership guard in `app/main.py` `recommend_drinks`.**
+- [x] **2.2 Add the ownership guard in `app/main.py` `recommend_drinks`.**
       After the inventory fetch and BEFORE `db.get_active_session()`/`create_session`: if `req.companion_ids` is non-empty, fetch `owned = db.list_companion_ids()`; if any requested ID is not in `owned`, `raise HTTPException(status_code=400, detail="One or more companion IDs are not yours")`. Remove the now-stale "Future: accept companion_ids; for now trust..." comment block.
       depends on: 2.1
 
-- [ ] **2.3 Add unit tests to `tests/test_recommend_endpoint.py`.**
+- [x] **2.3 Add unit tests to `tests/test_recommend_endpoint.py`.**
       (a) `test_recommend_rejects_foreign_companion`: mock `list_companion_ids` to return `{"c1"}`, POST with `companion_ids=["c-foreign"]`, expect 400 and assert `create_session` was NOT called. (b) `test_recommend_accepts_owned_companion`: `list_companion_ids` returns `{"c1"}`, POST with `companion_ids=["c1"]`, expect 200. Extend the `_mocked` context manager to stub `list_companion_ids`.
       **Verify:** `.venv/bin/python -m pytest -q tests/test_recommend_endpoint.py` green.
       depends on: 2.2

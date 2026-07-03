@@ -65,6 +65,11 @@ class DB:
     # Companions
     # ------------------------------------------------------------------
 
+    def list_companion_ids(self) -> set[str]:
+        """Return the set of companion IDs owned by the current user. RLS scopes to caller."""
+        rows = self._sb.table("companions").select("id").execute().data
+        return {r["id"] for r in rows}
+
     def list_companions(self, limit: int = 20, offset: int = 0) -> list[dict]:
         return (
             self._sb.table("companions").select("*").order("name")
