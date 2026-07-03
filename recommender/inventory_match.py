@@ -26,6 +26,27 @@ _STOPWORDS = {
     "rum", "gin", "vodka", "whiskey", "whisky", "tequila", "brandy", "cognac",
 }
 
+# Generic fruit/flavor tokens that alone cannot confirm a match. Prevents
+# "orange bitters" matching "Orange Curaçao" on the shared "orange" token alone.
+# Note: "sweet" and "dry" are intentionally excluded — they are genuine
+# subcategory qualifiers for vermouth (sweet vs dry) and must carry a match.
+_WEAK_TOKENS = {"orange", "lemon", "lime", "white", "blanco", "spiced", "aged"}
+
+# Maps ingredient category words → Bottle.category (or subcategory) values.
+# Used as a fallback when no name-token overlap is found. Lets a recipe calling
+# for a generic "bourbon" match an owned "Four Roses Small Batch" via category.
+_CATEGORY_TERMS: dict[str, set[str]] = {
+    "bourbon": {"bourbon"},
+    "rye": {"rye"},
+    "mezcal": {"mezcal"},
+    "tequila": {"tequila"},
+    "gin": {"gin"},
+    "rum": {"rum"},
+    "vodka": {"vodka"},
+    "amaro": {"amaro"},
+    "campari": {"amaro"},
+}
+
 
 def match_bottle(ingredient_name: str, inventory: list[Bottle]) -> Bottle | None:
     ing = _tokens(ingredient_name) - _STOPWORDS
@@ -39,8 +60,26 @@ def match_bottle(ingredient_name: str, inventory: list[Bottle]) -> Bottle | None
         overlap = ing & bt
         if not overlap:
             continue
+        # Skip matches where every overlapping token is a weak flavor word —
+        # they don't distinguish the bottle type, only a modifier.
+        if overlap.issubset(_WEAK_TOKENS):
+            continue
         # fraction of the smaller token set that overlaps
         score = len(overlap) / min(len(ing), len(bt))
         if score >= 0.5 and (best is None or score > best[0]):
             best = (score, b)
-    return best[1] if best else None
+
+    if best:
+        return best[1]
+
+    # Category fallback: if the ingredient's tokens contain a known category
+    # term, match any bottle whose category or subcategory equals that term.
+    for term in ing:
+        if term not in _CATEGORY_TERMS:
+            continue
+        target_cats = _CATEGORY_TERMS[term]
+        for b in inventory:
+            if b.category in target_cats or (b.subcategory and b.subcategory in target_cats):
+                return b
+
+    return None

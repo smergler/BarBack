@@ -1,3 +1,4 @@
+from evals.fixtures import INVENTORY as EVAL_INV
 from recommender.inventory_match import match_bottle
 from recommender.schemas import Bottle
 
@@ -46,3 +47,34 @@ def test_generic_category_word_alone_does_not_match():
 def test_empty_and_stopword_only_names():
     assert match_bottle("", INV) is None
     assert match_bottle("the of and", INV) is None
+
+
+# --- category fallback + weak-token tests against the eval fixture inventory ---
+
+def test_orange_bitters_does_not_match_cointreau():
+    # "orange bitters" → tokens = {"orange"} (bitters is stopword)
+    # Cointreau has subcategory="orange" but name token "cointreau" ≠ "orange"
+    # — must not match via either name or weak-token path.
+    assert match_bottle("orange bitters", EVAL_INV) is None
+
+
+def test_bourbon_category_fallback_matches_four_roses():
+    # "bourbon" doesn't appear in "Four Roses Small Batch" name tokens
+    # → category fallback must fire and return the bourbon bottle.
+    b = match_bottle("bourbon", EVAL_INV)
+    assert b is not None
+    assert b.name == "Four Roses Small Batch"
+
+
+def test_rye_still_matches_rittenhouse():
+    # "rye" overlaps with "Rittenhouse Rye" on the name token "rye" —
+    # must still work after the weak-token and category-fallback changes.
+    b = match_bottle("rye", EVAL_INV)
+    assert b is not None
+    assert b.name == "Rittenhouse Rye"
+
+
+def test_peychauds_bitters_does_not_match():
+    # "Peychaud's Bitters" → tokens = {"peychauds"} (bitters is stopword)
+    # No owned bottle has "peychauds" in its name tokens.
+    assert match_bottle("Peychaud's Bitters", EVAL_INV) is None

@@ -52,7 +52,7 @@
 
 ---
 
-## Task 2 — H2: Companion-ownership guard in POST /recommend
+## Task 2 ✅ — H2: Companion-ownership guard in POST /recommend
 
 **Produces:** `/recommend` rejects `companion_ids` that don't belong to the authenticated user with a 400 before any session is created — implementing the guard the backend spec declares mandatory but the code never had.
 
@@ -73,19 +73,19 @@
 
 **Produces:** `match_bottle` stops producing the two known errors that distort every grounding/makeable number: the false positive ("orange bitters" matching "Orange Curaçao" on the shared fruit word) and the false negative (generic "bourbon" never matching "Four Roses Small Batch" because category is never consulted). Metric deltas recorded in RESUME_STORY.
 
-- [ ] **3.1 Add a category-token fallback to `recommender/inventory_match.py`.**
+- [x] **3.1 Add a category-token fallback to `recommender/inventory_match.py`.**
       Introduce a `_CATEGORY_TERMS` mapping of generic spirit/category words → the `Bottle.category`/`subcategory` values they should match (e.g. `"bourbon" → {"bourbon"}`, `"rye" → {"rye"}`, `"mezcal" → {"mezcal"}`, `"tequila" → {"tequila"}`, `"gin" → {"gin"}`, `"rum" → {"rum"}`, `"vodka" → {"vodka"}`, `"campari" → subcategory "amaro"` only if you keep it name-based — prefer category where possible). In `match_bottle`, after the existing name-token overlap check finds nothing, if the ingredient's normalized tokens contain a category term, match any owned bottle whose `category` (or `subcategory`) equals that term. Keep the existing name-overlap path as the primary; the category path is a fallback only.
 
-- [ ] **3.2 Fix the false-positive path in `match_bottle`.**
+- [x] **3.2 Fix the false-positive path in `match_bottle`.**
       Ensure a bare fruit/qualifier token shared between an ingredient and an unrelated bottle can't alone produce a match. "orange bitters" (tokens after stopwords: `{orange}`) must NOT match "Orange Curaçao" (`{orange, curacao}` → but "orange" as a lone overlap on a liqueur is wrong). Decide the rule explicitly: a single generic fruit/adjective token (`orange`, `lemon`, `lime`, `dry`, `sweet`, `spiced`, `aged`, `white`, `blanco`) does not carry a match by itself unless it is the category term matched via 3.1. Add these to a `_WEAK_TOKENS` set checked in the scoring path.
       depends on: 3.1
 
-- [ ] **3.3 Add property tests `tests/test_inventory_match.py` (extend existing).**
+- [x] **3.3 Add property tests `tests/test_inventory_match.py` (extend existing).**
       Assert, against the `evals.fixtures.INVENTORY`: (a) `match_bottle("orange bitters", INVENTORY)` is None (Angostura is `bitters`, Cointreau/Curaçao is `orange` — neither is orange bitters); (b) `match_bottle("bourbon", INVENTORY)` returns the Four Roses bottle (category fallback); (c) `match_bottle("rye", INVENTORY)` returns Rittenhouse (unchanged, must not regress); (d) `match_bottle("Peychaud's Bitters", INVENTORY)` is None (must not regress the stopword fix). 
       **Verify:** `.venv/bin/python -m pytest -q tests/test_inventory_match.py` green.
       depends on: 3.2
 
-- [ ] **3.4 Re-run the offline eval and confirm no property-assertion regressions.**
+- [x] **3.4 Re-run the offline eval and confirm no property-assertion regressions.**
       `.venv/bin/python -m evals.run_evals --strict`. If the matcher change moves any scenario's grounding below its `expect_min_grounded_rate`, investigate whether that's a real fix or a matcher bug before proceeding. Record the new mock grounding/makeable numbers.
       **Verify:** exits 0.
       depends on: 3.3
