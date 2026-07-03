@@ -125,7 +125,7 @@
       `run_model` currently builds `judge_llm = AnthropicClient(model=model_id)` — change it to the pinned `JUDGE_MODEL` so judge scores are identical-basis across swept models. Add a note in the printed output/header that the judge is pinned.
       depends on: 5.1
 
-- [ ] **5.3 Re-run judge calibration and re-record agreement.**
+- [x] **5.3 Re-run judge calibration and re-record agreement.**
       With the pinned judge, run the calibration flow (`scripts/full_eval.sh` then rename `judge_verdicts.json` → `judge_verdicts_calibration.json`, then `.venv/bin/python -m evals.calibrate_judge`). Update the P2 calibration numbers in `RESUME_STORY.md` if they moved, and note the judge is now model-pinned.
       Requires human: spends API tokens, needs `ANTHROPIC_API_KEY`, and calibration involves eyeballing agreement/disagreements.
       depends on: 5.2

@@ -289,7 +289,9 @@ RAG name accuracy recovered from 55% → 73% with the reframing. No-RAG improved
 
 ## Judge calibration results (P2)
 
-Human labels (16 suggestions) vs LLM judge, keyed on `suggestion_hash` (SHA256[:8] of sorted ingredient names+sources — stable across renames, invalidates on recipe change):
+Human labels (16 suggestions) vs LLM judge, keyed on `suggestion_hash` (SHA256[:8] of sorted ingredient names+sources — stable across renames, invalidates on recipe change).
+
+**Judge is now model-pinned to `claude-haiku-4-5-20251001`** (previously used the candidate model, introducing self-preference bias). Re-calibration confirmed identical agreement — the prior run was already haiku, so pinning didn't move the numbers; it just makes them stable across future sweeps.
 
 | Dimension | Agreement |
 |---|---|
