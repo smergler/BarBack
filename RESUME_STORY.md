@@ -26,6 +26,7 @@ _All "mock" numbers are from offline runs with seeded-violation stubs — no tok
 | Live + 4 adversarial classics added (Negroni w/o gin, Sazerac, Mai Tai, count=5 from 3 bottles) | **100% grounded** | — | — | Model flags, doesn't fake — substitutes or marks `missing`. But see below: grounding ≠ makeable. |
 | Mock baseline — current 14-scenario set + makeable metric added | **59%** | **89%** | **58%** | Lower grounding% expected: adversarial scenarios drag the mock average down (they're designed to catch violations). Makeable 89% means most open-ended suggestions are anchored in ≥1 owned bottle. |
 | **Live run** (claude-haiku-4-5, historical 12-scenario set, + judge) | **100%** | **94%** | **75%** | JUDGE: constraints respected 74%, occasion fit 4.6/5, recipe plausibility 4.4/5, **name accuracy 58%** — model grounds correctly but misnames ~42% of drinks (e.g. calls a Boulevardier a "Negroni"). Next lever: name-accuracy prompt work or structured output with canonical name validation. |
+| **Live run — post matcher fix** (claude-haiku-4-5, all 14 scenarios, pinned haiku judge) | **100%** | **100%** | **79%** | JUDGE (pinned: claude-haiku-4-5): constraints 77%, occasion fit 4.5/5, plausibility 4.7/5, **name accuracy 68%** (22/22), companion targeting 3.8/5. Makeable jumped 94%→100%: the category-fallback matcher now correctly anchors generic "bourbon"/"rye" recipes in owned bottles instead of floating them as `missing`. |
 
 ## Engineering decisions worth talking about (the "why" matters more than the "what")
 

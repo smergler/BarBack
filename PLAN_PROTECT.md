@@ -90,7 +90,7 @@
       **Verify:** exits 0.
       depends on: 3.3
 
-- [ ] **3.5 Run the live eval and record metric deltas in `RESUME_STORY.md`.**
+- [x] **3.5 Run the live eval and record metric deltas in `RESUME_STORY.md`.**
       `.venv/bin/python -m evals.run_evals --live --judge`. Add a short "matcher fix" entry to the metrics timeline showing before/after grounding + makeable, framed as "found two matcher bugs distorting the metric; fixed both; here's the corrected baseline."
       Requires human: this spends API tokens and needs `ANTHROPIC_API_KEY`; the user must approve/run the live call and eyeball the suggestions for sanity.
       depends on: 3.4

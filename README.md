@@ -36,6 +36,7 @@ The recommender is graded by a measurement harness, not vibes:
 | Live baseline after prompt tightening | 100% | — | — | Grounding failure → pantry boundary fix → metric moved. |
 | Mock baseline, current 14 scenarios (+ adversarial) | 59% | 89% | 58% | Lower grounding% expected: adversarial scenarios are designed to catch violations. |
 | **Live run** (claude-haiku-4-5, historical 12-scenario set) | **100%** | **94%** | **75%** | JUDGE: constraints 74%, occasion fit 4.6/5, plausibility 4.4/5, name accuracy 58% — model grounds perfectly but misnames ~42% of drinks. |
+| **Live run — post matcher fix** (haiku, all 14 scenarios, pinned judge) | **100%** | **100%** | **79%** | JUDGE: constraints 77%, occasion fit 4.5/5, plausibility 4.7/5, name accuracy 68%. Makeable hit 100%: category-fallback matcher anchors generic spirit names in owned bottles. |
 
 _See [`RESUME_STORY.md`](RESUME_STORY.md) for the full story including why 59% grounding mock ≠ regression._
 
