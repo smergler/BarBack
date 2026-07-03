@@ -154,29 +154,29 @@
 
 **Produces:** Documentation stops contradicting the code. Small, mechanical, high-trust-per-minute fixes. (Number-refresh items that depend on eval re-runs are handled in Tasks 3–5; this task is the remaining textual/structural cleanup.)
 
-- [ ] **7.1 Fix the `backend/db.py` module docstring.**
+- [x] **7.1 Fix the `backend/db.py` module docstring.**
       The usage example reads `db = DB(user_jwt=user_id_from_auth_dep)` — passing the user_id, the exact P6.9 bug. Change it to pass the raw Bearer JWT and make the surrounding comment unambiguous that `user_jwt` is the token, never the `sub`/user_id.
 
-- [ ] **7.2 Reconcile "12 vs 14 scenarios" across docs.**
+- [x] **7.2 Reconcile "12 vs 14 scenarios" across docs.**
       Grep `README.md`, `RESUME_STORY.md`, `docs/eval-spec.md` for "12 scenario"/"14 scenario" and standardize on the actual count (14). Where a historical milestone genuinely used a smaller set, label it explicitly as "(historical, N-scenario set)" rather than leaving a bare inconsistent number.
 
-- [ ] **7.3 Refresh README token/cost figures from trace data.**
+- [x] **7.3 Refresh README token/cost figures from trace data.**
       README claims ~600 input tokens/request; trace data averages ~1,320. Update the per-request token and cost figures in `README.md`'s Cost section to match the recorded trace numbers (cite the trace summary in RESUME_STORY as the source).
 
-- [ ] **7.4 State explicitly that RAG is eval-only.**
+- [x] **7.4 State explicitly that RAG is eval-only.**
       In `README.md` and `RESUME_STORY.md`, add one sentence where RAG is discussed: production `/recommend` does not use retrieval (`use_retrieval=False`); RAG exists behind the eval `--rag` flag, and the A/B showed it trailing on constraints — so it was deliberately not shipped. Removes the impression that RAG is in the live product.
 
-- [ ] **7.5 Delete the duplicate migration `backend/migrations/001_init.sql`.**
+- [x] **7.5 Delete the duplicate migration `backend/migrations/001_init.sql`.**
       It is a near-identical copy of `supabase/migrations/20260622000000_init.sql` (grants inline vs separate file) — two schema sources of truth. Remove `backend/migrations/001_init.sql` (and the now-empty `backend/migrations/` dir if nothing else lives there). Update any README/PLAN reference that points at it to point at `supabase/migrations/`.
 
-- [ ] **7.6 Delete `.env.copy`.**
+- [x] **7.6 Delete `.env.copy`.**
       It holds real secrets on disk (untracked). Remove it; if a template is wanted, `env.template` already exists with placeholders. Confirm `git ls-files` shows it was never tracked before deleting.
 
 - [ ] **7.7 Standardize on one Railway URL.**
       PLAN.md history shows `drinksuggesterproject-production...`; README/RESUME_STORY show `barback-production...`. Replace stale occurrences with the single canonical live URL across `README.md` and `RESUME_STORY.md`.
       Requires human: only the user knows which Railway deployment is the current/canonical one — confirm the URL before mass-replacing.
 
-- [ ] **7.8 (Optional, low-risk) Rename `SUPABASE_JWT_TOKEN` → `SUPABASE_JWT_SECRET`.**
+- [x] **7.8 (Optional, low-risk) Rename `SUPABASE_JWT_TOKEN` → `SUPABASE_JWT_SECRET`.**
       It holds the JWT signing *secret*, not a token. Update `backend/auth.py`, `env.template`, `README.md`, and `tests/test_rls_isolation.py`'s `_REQUIRED` list consistently. If the live deploy's env var can't be renamed easily, skip this and instead add a clarifying comment at each use site.
       Requires human: renaming the env var in the Railway/Supabase deploy dashboards is an external action; if not renaming there, leave the code var name and add comments only.
 

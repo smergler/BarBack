@@ -231,7 +231,9 @@ auth-required test, happy path, and relevant error paths (404, 409, 422).
 
 ---
 
-## RAG / retrieval (P3 — completed)
+## RAG / retrieval (P3 — completed; eval-only, not shipped)
+
+> **Note:** Production `/recommend` does not use retrieval (`use_retrieval=False`). RAG exists behind the `--rag` eval flag only. The A/B showed it trailing on constraint adherence and name accuracy — so it was deliberately not shipped to production.
 
 **What was built:**
 - `scripts/fetch_cocktaildb.py` — fetched 581 canonical recipes from CocktailDB API into `data/cocktails.json` (expanded from 426 via category filter)

@@ -39,6 +39,8 @@ The recommender is graded by a measurement harness, not vibes:
 
 _See [`RESUME_STORY.md`](RESUME_STORY.md) for the full story including why 59% grounding mock ≠ regression._
 
+**Note on RAG:** production `/recommend` does not use retrieval (`use_retrieval=False`). RAG was evaluated via an A/B (`--rag` flag) and found to improve grounding slightly but hurt constraint adherence and name accuracy — so it was deliberately not shipped. See RESUME_STORY.md for the full A/B story.
+
 See [`docs/eval-spec.md`](docs/eval-spec.md) for exact definitions and
 [`RESUME_STORY.md`](RESUME_STORY.md) for the full narrative and engineering decisions.
 
@@ -95,7 +97,7 @@ app/
   main.py          FastAPI app: all routers, /recommend → real inventory + session lifecycle
   static/          vanilla JS SPA with login, inventory, companions, recommend + verdict tabs
 docs/              eval-spec.md, adr-001-data-isolation.md, backend-spec.md
-backend/migrations/  001_init.sql — all tables, RLS policies, triggers, RPCs (idempotent)
+supabase/migrations/ schema history (init, grants, defaults, telemetry, suited_for, ownership guard)
 PLAN.md            build plan (atomic, status-tracked subtasks)
 RESUME_STORY.md    narrative, metrics timeline, key decisions
 ```
@@ -130,14 +132,15 @@ SUPABASE_JWT_TOKEN=...    # project JWT secret (Settings → API)
 
 Runs on **Claude Haiku 4.5** ($1.00 / 1M input tokens, $5.00 / 1M output tokens).
 
-Per recommendation request: ~600 input tokens (system prompt + ~20-bottle inventory +
-request) and ~800 output tokens (3 structured drinks) → **≈ $0.0046**, under half a cent.
+Per recommendation request: ~1,320 input tokens (system prompt + inventory + request)
+and ~457 output tokens (3 structured drinks) → **≈ $0.0036**, under half a cent.
+_(Source: trace summary from 14-scenario live eval run; see RESUME_STORY.md.)_
 
 | Personal usage | Requests/mo | Est. cost/mo |
 |---|---|---|
-| Light (3/day) | ~90 | ~$0.40 |
-| Moderate (8/day) | ~240 | ~$1.10 |
-| Heavy (15/day) | ~450 | ~$2.10 |
+| Light (3/day) | ~90 | ~$0.32 |
+| Moderate (8/day) | ~240 | ~$0.86 |
+| Heavy (15/day) | ~450 | ~$1.62 |
 
 A full offline eval run is **free** (mock responses). A full `--live --judge` run is
 ~30 calls ≈ **under $0.20**. Swapping to Opus 4.8 ($5/$25 per 1M) is ~5× across the board —
