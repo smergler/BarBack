@@ -34,10 +34,10 @@ The recommender is graded by a measurement harness, not vibes:
 |---|---|---|---|---|
 | Mock baseline, original 8 scenarios (seeded violations) | 64% | — | — | Proved the scorer catches violations before spending a token. |
 | Live baseline after prompt tightening | 100% | — | — | Grounding failure → pantry boundary fix → metric moved. |
-| Mock baseline, current 12 scenarios (+ adversarial) | 53% | 88% | 50% | Lower grounding% expected: adversarial scenarios are designed to catch violations. |
-| **Live run** (claude-haiku-4-5, all 12 scenarios) | **100%** | **94%** | **75%** | JUDGE: constraints 74%, occasion fit 4.6/5, plausibility 4.4/5, name accuracy 58% — model grounds perfectly but misnames ~42% of drinks. |
+| Mock baseline, current 14 scenarios (+ adversarial) | 59% | 89% | 58% | Lower grounding% expected: adversarial scenarios are designed to catch violations. |
+| **Live run** (claude-haiku-4-5, historical 12-scenario set) | **100%** | **94%** | **75%** | JUDGE: constraints 74%, occasion fit 4.6/5, plausibility 4.4/5, name accuracy 58% — model grounds perfectly but misnames ~42% of drinks. |
 
-_See [`RESUME_STORY.md`](RESUME_STORY.md) for the full story including why 53% grounding mock ≠ regression._
+_See [`RESUME_STORY.md`](RESUME_STORY.md) for the full story including why 59% grounding mock ≠ regression._
 
 See [`docs/eval-spec.md`](docs/eval-spec.md) for exact definitions and
 [`RESUME_STORY.md`](RESUME_STORY.md) for the full narrative and engineering decisions.

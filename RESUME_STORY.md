@@ -16,7 +16,7 @@ deterministic **eval harness** that measures and protects recommendation quality
 ## The metrics timeline (the spine of the story)
 
 _All "mock" numbers are from offline runs with seeded-violation stubs — no tokens spent.
-"Current" refers to the 12-scenario set including 4 adversarial named-classic scenarios added later._
+"Current" refers to the 14-scenario set including 4 adversarial named-classic scenarios and 2 companion-targeting scenarios._
 
 | Milestone | Grounding | Makeable | Makeable-now | Notes |
 |---|---|---|---|---|
@@ -24,8 +24,8 @@ _All "mock" numbers are from offline runs with seeded-violation stubs — no tok
 | **Live baseline** (claude-haiku-4-5), original 8 scenarios | **91%** | — | — | 10/11 grounded. Failure: model labeled honey/cinnamon as `pantry` (over-assumed on-hand). |
 | After tightening the pantry system prompt | **100%** | — | — | Model now flags honey/spices as `perishable` ("grab these"). Real before/after. |
 | Live + 4 adversarial classics added (Negroni w/o gin, Sazerac, Mai Tai, count=5 from 3 bottles) | **100% grounded** | — | — | Model flags, doesn't fake — substitutes or marks `missing`. But see below: grounding ≠ makeable. |
-| Mock baseline — current 12-scenario set + makeable metric added | **53%** | **88%** | **50%** | Lower grounding% expected: adversarial scenarios drag the mock average down (they're designed to catch violations). Makeable 88% means most open-ended suggestions are anchored in ≥1 owned bottle. |
-| **Live run** (claude-haiku-4-5, all 12 scenarios, + judge) | **100%** | **94%** | **75%** | JUDGE: constraints respected 74%, occasion fit 4.6/5, recipe plausibility 4.4/5, **name accuracy 58%** — model grounds correctly but misnames ~42% of drinks (e.g. calls a Boulevardier a "Negroni"). Next lever: name-accuracy prompt work or structured output with canonical name validation. |
+| Mock baseline — current 14-scenario set + makeable metric added | **59%** | **89%** | **58%** | Lower grounding% expected: adversarial scenarios drag the mock average down (they're designed to catch violations). Makeable 89% means most open-ended suggestions are anchored in ≥1 owned bottle. |
+| **Live run** (claude-haiku-4-5, historical 12-scenario set, + judge) | **100%** | **94%** | **75%** | JUDGE: constraints respected 74%, occasion fit 4.6/5, recipe plausibility 4.4/5, **name accuracy 58%** — model grounds correctly but misnames ~42% of drinks (e.g. calls a Boulevardier a "Negroni"). Next lever: name-accuracy prompt work or structured output with canonical name validation. |
 
 ## Engineering decisions worth talking about (the "why" matters more than the "what")
 

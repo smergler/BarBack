@@ -101,13 +101,13 @@
 
 **Produces:** The `companion_bitter_only` mock stops seeding a hidden violation while claiming to be "clean," and `--strict` actually guards the scenarios whose mocks are meant to be fully grounded.
 
-- [ ] **4.1 Fix the `companion_bitter_only` mock in `evals/mock_responses.py`.**
+- [x] **4.1 Fix the `companion_bitter_only` mock in `evals/mock_responses.py`.**
       The Campari Spritz uses `soda water` tagged `source: pantry`, which isn't in the allowlist, so it registers as a violation despite the "clean" annotation. Change `soda water` to `source: "perishable"` (it varies household to household — correct classification) so the mock is genuinely clean. Keep the annotation comment accurate.
 
-- [ ] **4.2 Add `expect_min_grounded_rate=1.0` to the clean scenarios in `evals/fixtures.py`** that currently lack it but whose mocks are meant to be fully grounded: `companion_mezcal` is a *seeded-violation* scenario (leave it), but `companion_smoke_sweet` and `companion_bitter_only` are clean — add the assertion to those two so `--strict` protects them. Do NOT add it to the adversarial/seeded scenarios (tiki, margarita, negroni_no_gin, etc.).
+- [x] **4.2 Add `expect_min_grounded_rate=1.0` to the clean scenarios in `evals/fixtures.py`** that currently lack it but whose mocks are meant to be fully grounded: `companion_mezcal` is a *seeded-violation* scenario (leave it), but `companion_smoke_sweet` and `companion_bitter_only` are clean — add the assertion to those two so `--strict` protects them. Do NOT add it to the adversarial/seeded scenarios (tiki, margarita, negroni_no_gin, etc.).
       depends on: 4.1
 
-- [ ] **4.3 Refresh the documented mock baseline.**
+- [x] **4.3 Refresh the documented mock baseline.**
       Run `.venv/bin/python -m evals.run_evals --strict`, capture the new mock grounding rate (was quoted as 53%/12 scenarios; actual is 55%/14). Update the number and scenario count everywhere it appears in `RESUME_STORY.md` and `README.md`.
       **Verify:** exits 0; grep confirms no remaining "53%" / "12 scenario" references tied to the mock baseline.
       depends on: 4.2
