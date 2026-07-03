@@ -69,7 +69,7 @@
 
 ---
 
-## Task 3 — M2: Category-aware bottle matcher
+## Task 3 ✅ — M2: Category-aware bottle matcher
 
 **Produces:** `match_bottle` stops producing the two known errors that distort every grounding/makeable number: the false positive ("orange bitters" matching "Orange Curaçao" on the shared fruit word) and the false negative (generic "bourbon" never matching "Four Roses Small Batch" because category is never consulted). Metric deltas recorded in RESUME_STORY.
 
@@ -97,7 +97,7 @@
 
 ---
 
-## Task 4 — M3: Fix the mislabeled mock and harden --strict
+## Task 4 ✅ — M3: Fix the mislabeled mock and harden --strict
 
 **Produces:** The `companion_bitter_only` mock stops seeding a hidden violation while claiming to be "clean," and `--strict` actually guards the scenarios whose mocks are meant to be fully grounded.
 
