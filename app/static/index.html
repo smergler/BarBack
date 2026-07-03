@@ -706,10 +706,10 @@
         throw new Error(data.detail || `HTTP ${res.status}`);
       }
       currentSessionId = res.headers.get('x-session-id');
-      const { suggestions } = await res.json();
+      const { suggestions, drink_ids } = await res.json();
 
-      // Fetch all session drinks — gives us IDs for verdict buttons and the full
-      // history needed to render every batch suggested this session.
+      // Fetch prior session drinks for history rendering; new batch IDs come
+      // directly from the response so we don't depend on insertion order.
       let sessionDrinks = [];
       if (currentSessionId) {
         try {
@@ -720,9 +720,9 @@
       // Prior drinks = everything except the batch just added.
       const priorDrinks = sessionDrinks.slice(0, sessionDrinks.length - suggestions.length);
 
-      // New batch: use the response objects (richer description) with IDs from DB.
+      // New batch: IDs come from the API response (stable, not positional guess).
       const newHtml = suggestions.map((s, i) => {
-        const id = sessionDrinks[priorDrinks.length + i]?.id;
+        const id = (drink_ids && drink_ids[i]) || sessionDrinks[priorDrinks.length + i]?.id;
         return renderCard(s, id, null);
       }).join('');
 

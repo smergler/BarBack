@@ -136,15 +136,15 @@
 
 **Produces:** The frontend stops guessing which drink card maps to which DB row by list position (fragile under identical batch timestamps) — the API returns the IDs directly.
 
-- [ ] **6.1 Return created drink IDs from `app/main.py` `recommend_drinks`.**
+- [x] **6.1 Return created drink IDs from `app/main.py` `recommend_drinks`.**
       `db.create_session_drinks(session_id, drinks_payload)` already returns the inserted rows. Capture them and include their IDs in the response body — add a `drink_ids: list[str]` field to the JSON response (aligned by index with `result.suggestions`), alongside the existing `suggestions`. Keep the `X-Session-Id` header. Ensure `create_session_drinks` insert order matches suggestion order.
 
-- [ ] **6.2 Update `tests/test_recommend_endpoint.py`.**
+- [x] **6.2 Update `tests/test_recommend_endpoint.py`.**
       Extend `test_recommend_saves_drinks_to_session` (or add a new test) to assert the response body contains `drink_ids` with one ID per suggestion, matching the IDs returned by the mocked `create_session_drinks`. Update the mock's `create_session_drinks.return_value` to include `id` fields.
       **Verify:** `.venv/bin/python -m pytest -q tests/test_recommend_endpoint.py` green.
       depends on: 6.1
 
-- [ ] **6.3 Consume `drink_ids` in `app/static/index.html`.**
+- [x] **6.3 Consume `drink_ids` in `app/static/index.html`.**
       In the `/recommend` submit handler, replace the positional inference (`sessionDrinks[priorDrinks.length + i]?.id`) for the *new batch* with the `drink_ids` array from the response. Prior batches still come from the `GET /sessions/{id}/drinks` fetch (those already carry stable IDs). Verify verdict buttons on the new batch carry the correct `data-drink-id`.
       depends on: 6.1
 

@@ -136,7 +136,7 @@ def recommend_drinks(
     result = recommend(req, inventory_bottles, llm)
     latency_ms = round((time.perf_counter() - t0) * 1000)
 
-    # Save suggested drinks as session_drinks
+    # Save suggested drinks as session_drinks; capture inserted IDs for the response.
     drinks_payload = [
         {
             "name": s.name,
@@ -147,7 +147,8 @@ def recommend_drinks(
         }
         for s in result.suggestions
     ]
-    db.create_session_drinks(session_id, drinks_payload)
+    created_drinks = db.create_session_drinks(session_id, drinks_payload)
+    drink_ids = [d["id"] for d in created_drinks] if created_drinks else []
 
     # Write telemetry — non-fatal if it fails (e.g. DB unavailable).
     if llm.last_usage is not None:
@@ -162,8 +163,10 @@ def recommend_drinks(
         except Exception:
             logging.exception("Failed to write session telemetry (non-fatal)")
 
+    body = result.model_dump()
+    body["drink_ids"] = drink_ids
     response = JSONResponse(
-        content=result.model_dump(),
+        content=body,
         headers={"X-Session-Id": session_id},
     )
     return response

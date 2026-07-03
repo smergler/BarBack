@@ -42,7 +42,7 @@ def _mocked(bottles=None, active_session=None, companion_ids=None):
     mock_db.list_bottles.return_value = bottles if bottles is not None else [BOTTLE]
     mock_db.get_active_session.return_value = active_session
     mock_db.create_session.return_value = SESSION
-    mock_db.create_session_drinks.return_value = []
+    mock_db.create_session_drinks.return_value = [{"id": "drink-1"}]
     mock_db.list_companion_ids.return_value = set(companion_ids) if companion_ids is not None else set()
 
     app.dependency_overrides[get_current_user] = lambda: "user-1"
@@ -99,6 +99,17 @@ def test_recommend_saves_drinks_to_session():
     assert drinks_arg[0]["name"] == "Boulevardier"
     assert "suited_for" in drinks_arg[0]
     assert drinks_arg[0]["suited_for"] == []
+
+
+def test_recommend_returns_drink_ids():
+    """drink_ids in response body aligns by index with suggestions."""
+    with _mocked(active_session=None) as db:
+        db.create_session_drinks.return_value = [{"id": "drink-uuid-1"}]
+        resp = client.post("/recommend", json={"occasion": "movie night"}, headers=AUTH_HEADER)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "drink_ids" in body
+    assert body["drink_ids"] == ["drink-uuid-1"]
 
 
 def test_recommend_writes_telemetry_when_usage_present():
