@@ -82,7 +82,7 @@ Goal: a clickable demo. Keep it minimal — no DB, no auth, hardcoded inventory 
       _Created; ingredient source badges color-coded (inventory/pantry/perishable/missing)._
 - [x] **3.5 Serve static** from FastAPI (`StaticFiles` mounted at `/`). Verify the page works against local API.
       _StaticFiles uses absolute path (Path(__file__).parent/static); rate limiter (20/min global, 10/min /recommend); RecommendationError → 502; input max_length 200 + count 1-10; frontend XSS-safe via txt() escaping + 30s fetch timeout; 34 tests green._
-- [x] **3.6 🧑 Deploy to Railway**: deployed. URL: https://drinksuggesterproject-production.up.railway.app
+- [x] **3.6 🧑 Deploy to Railway**: deployed. URL: https://barback-production.up.railway.app
 - [x] **3.7 🧑 Verify the live URL** end-to-end from a browser (human). Then put the URL in
       `README.md` and `RESUME_STORY.md`. Commit.
       _Verified. Real output: Boulevardier (correctly named, all inventory) + "Negroni" using mezcal/dry vermouth — live demonstration of the 58% name accuracy finding._

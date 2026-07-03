@@ -41,7 +41,7 @@
       **Verify:** `.venv/bin/python -m pytest -q tests/test_rpc_guard.py` green.
       depends on: 1.1
 
-- [ ] **1.4 Apply the migration to live Supabase.** Run `supabase db push`.
+- [x] **1.4 Apply the migration to live Supabase.** Run `supabase db push`.
       Requires human: applying a migration to the hosted Supabase project needs dashboard/CLI credentials an agent doesn't have. Hand over the command and the migration path; wait for confirmation it applied cleanly.
       depends on: 1.2
 
@@ -172,7 +172,7 @@
 - [x] **7.6 Delete `.env.copy`.**
       It holds real secrets on disk (untracked). Remove it; if a template is wanted, `env.template` already exists with placeholders. Confirm `git ls-files` shows it was never tracked before deleting.
 
-- [ ] **7.7 Standardize on one Railway URL.**
+- [x] **7.7 Standardize on one Railway URL.**
       PLAN.md history shows `drinksuggesterproject-production...`; README/RESUME_STORY show `barback-production...`. Replace stale occurrences with the single canonical live URL across `README.md` and `RESUME_STORY.md`.
       Requires human: only the user knows which Railway deployment is the current/canonical one — confirm the URL before mass-replacing.
 
