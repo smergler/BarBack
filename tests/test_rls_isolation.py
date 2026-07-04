@@ -104,3 +104,33 @@ def test_rls_companion_isolation():
         )
     finally:
         db_a.delete_companion(companion_id)
+
+
+@live_rls
+def test_rls_rpc_isolation():
+    """User B cannot write preferences to User A's companion via the guarded RPCs."""
+    from backend.db import DB
+
+    jwt_a = _sign_in(os.environ["TEST_USER_A_EMAIL"], os.environ["TEST_USER_A_PASSWORD"])
+    jwt_b = _sign_in(os.environ["TEST_USER_B_EMAIL"], os.environ["TEST_USER_B_PASSWORD"])
+    db_a, db_b = DB(jwt_a), DB(jwt_b)
+
+    companion_name = f"rls-rpc-{os.getpid()}"
+    companion = db_a.create_companion(companion_name)
+    companion_id = companion["id"]
+    try:
+        raised = False
+        try:
+            db_b.upsert_companion_like(companion_id, "bourbon")
+        except Exception:
+            raised = True
+
+        assert raised, "RLS FAILURE: User B wrote a preference to User A's companion without error"
+
+        # Confirm no preference row was created for this companion.
+        prefs = db_a.list_preferences(companion_id)
+        assert not prefs, (
+            f"RLS FAILURE: preference row exists on User A's companion after User B's attempt: {prefs}"
+        )
+    finally:
+        db_a.delete_companion(companion_id)

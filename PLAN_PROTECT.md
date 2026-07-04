@@ -25,7 +25,7 @@
 
 ---
 
-## Task 1 — H1: Cross-tenant preference writes via SECURITY DEFINER RPCs
+## Task 1 ✅ — H1: Cross-tenant preference writes via SECURITY DEFINER RPCs
 
 **Produces:** A migration that makes `upsert_companion_like`/`upsert_companion_dislike` reject companions the caller doesn't own, plus tests proving the hole is closed. This is the single "do it now" security fix — currently any authenticated user can write preferences onto any companion UUID via PostgREST `/rpc`.
 
@@ -45,7 +45,7 @@
       Requires human: applying a migration to the hosted Supabase project needs dashboard/CLI credentials an agent doesn't have. Hand over the command and the migration path; wait for confirmation it applied cleanly.
       depends on: 1.2
 
-- [ ] **1.5 Add live RLS test `test_rls_rpc_isolation` to `tests/test_rls_isolation.py`.**
+- [x] **1.5 Add live RLS test `test_rls_rpc_isolation` to `tests/test_rls_isolation.py`.**
       Using the existing two-user `_sign_in` fixture pattern: User A creates a companion; User B (via `DB(jwt_b).upsert_companion_like(companion_a_id, "bourbon")`) must fail (expect an exception / non-success). Then assert via User A that no preference row was created for that companion. Auto-skip when `TEST_USER_A/B` env vars are absent (reuse the existing `live_rls` skipif marker). Self-clean created rows in a `finally`.
       Requires human: running this test live needs the two test-user credentials in `.env`; without them it auto-skips. Confirm creds are present and run `.venv/bin/python -m pytest tests/test_rls_isolation.py -v`.
       depends on: 1.4
