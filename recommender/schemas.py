@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 
 
 class IngredientSource(str, Enum):
@@ -43,9 +44,9 @@ class Bottle(BaseModel):
 
 
 class CompanionProfile(BaseModel):
-    name: str
-    likes: list[str] = Field(default_factory=list)
-    dislikes: list[str] = Field(default_factory=list)
+    name: str = Field(..., max_length=100)
+    likes: list[str] = Field(default_factory=list, max_length=20)
+    dislikes: list[str] = Field(default_factory=list, max_length=20)
 
 
 class SessionDrinkFeedback(BaseModel):
@@ -57,11 +58,15 @@ class RecommendRequest(BaseModel):
     occasion: str = Field(..., max_length=200)
     mood: str | None = Field(None, max_length=200)
     count: int = Field(3, ge=1, le=10)
-    constraints: list[str] = Field(default_factory=list)
-    companions: list[CompanionProfile] = Field(default_factory=list)
+    constraints: list[Annotated[str, StringConstraints(max_length=100)]] = Field(
+        default_factory=list, max_length=20
+    )
+    companions: list[CompanionProfile] = Field(default_factory=list, max_length=10)
     companion_ids: list[str] = Field(default_factory=list)
     # Fresh ingredients the user confirms they have on hand right now.
-    available_perishables: list[str] = Field(default_factory=list)
+    available_perishables: list[Annotated[str, StringConstraints(max_length=100)]] = Field(
+        default_factory=list, max_length=30
+    )
     # Server-populated: drinks already suggested this session (LLM deduplication).
     already_suggested: list[str] = Field(default_factory=list)
     # Server-populated: non-neutral verdicts from this session.

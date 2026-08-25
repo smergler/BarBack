@@ -283,7 +283,7 @@ IP) or per-client, and fixes it if so.
 **Produces:** caps every user-controlled field that flows into the LLM prompt, closing the
 unbounded-cost gap where `occasion`/`mood` are capped but the list fields aren't.
 
-- [ ] **5.1 Add `max_length` to the unbounded fields** in `recommender/schemas.py:56-68`
+- [x] **5.1 Add `max_length` to the unbounded fields** in `recommender/schemas.py:56-68`
       (`RecommendRequest`). Change:
       ```python
       constraints: list[str] = Field(default_factory=list, max_length=20)
