@@ -195,7 +195,7 @@ verdict endpoint.
       the guarded RPCs at all — the in-function `auth.uid()` check was the only thing stopping
       unauthenticated calls before this.
 
-- [ ] **3.2 Add a cleanup query to the same migration file**, above the policy change, to delete
+- [x] **3.2 Add a cleanup query to the same migration file**, above the policy change, to delete
       any `session_companions` rows written before this guard existed where the companion doesn't
       belong to the session's owner:
       ```sql
