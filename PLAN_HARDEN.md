@@ -140,7 +140,7 @@ skipped. This is the sole automated evidence for the milestone's central securit
       `tests/test_rls_isolation.py`'s docstring, which is why the requirement is easy to miss).
       depends on: 2.1
 
-- [ ] **2.3 Add a CI job step that fails (not skips) when live-RLS creds are absent.**
+- [x] **2.3 Add a CI job step that fails (not skips) when live-RLS creds are absent.**
       In `.github/workflows/ci.yml`, add a step after "Unit tests" named "Live RLS isolation"
       that runs `.venv/bin/python -m pytest tests/test_rls_isolation.py -v` with the
       `TEST_USER_*` and `SUPABASE_*` secrets injected via `env:`. Add a small check immediately
