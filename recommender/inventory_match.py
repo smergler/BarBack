@@ -44,7 +44,6 @@ _CATEGORY_TERMS: dict[str, set[str]] = {
     "rum": {"rum"},
     "vodka": {"vodka"},
     "amaro": {"amaro"},
-    "campari": {"amaro"},
 }
 
 
