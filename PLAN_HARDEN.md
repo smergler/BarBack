@@ -224,7 +224,7 @@ verdict endpoint.
       ```
       Add `import logging` at the top of the file if not already present.
 
-- [ ] **3.4 Add `tests/test_session_drinks_feedback.py`** covering: `_apply_feedback` with a
+- [x] **3.4 Add `tests/test_session_drinks_feedback.py`** covering: `_apply_feedback` with a
       `session.get("session_companions", [])` entry whose `companion_id` doesn't belong to the
       current user's companions — mock `db.upsert_companion_like` to raise, assert
       `set_verdict`'s caller-visible behavior is unaffected (no exception propagates past
