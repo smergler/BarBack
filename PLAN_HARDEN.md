@@ -413,7 +413,7 @@ already-applied migrations.
       `uvicorn[standard]>=0.30,<1.0`. Matches the shape already used for the `anthropic` pin
       (`requirements.txt:2`) so a breaking major-version release can't land unreviewed.
 
-- [ ] **7.6 Run the full test suite and offline eval one final time**, confirm green:
+- [x] **7.6 Run the full test suite and offline eval one final time**, confirm green:
       `.venv/bin/python -m pytest -q` and `.venv/bin/python -m evals.run_evals --strict`.
       depends on: 7.5, 6.6
 
