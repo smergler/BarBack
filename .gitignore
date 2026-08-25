@@ -12,6 +12,10 @@
 
 # testing
 /coverage
+.coverage
+
+# obsidian
+.obsidian/
 
 # next.js
 /.next/
