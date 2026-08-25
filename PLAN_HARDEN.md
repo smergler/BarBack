@@ -366,7 +366,7 @@ requirements, the temperature-retry false-trigger, and the `</user_data>` fence 
       function itself emits.
       depends on: 6.4
 
-- [ ] **6.6 Run the full test suite**, confirm green: `.venv/bin/python -m pytest -q`.
+- [x] **6.6 Run the full test suite**, confirm green: `.venv/bin/python -m pytest -q`.
       depends on: 6.1, 6.2, 6.3, 6.5
 
 ---
