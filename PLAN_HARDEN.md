@@ -327,7 +327,7 @@ unbounded-cost gap where `occasion`/`mood` are capped but the list fields aren't
 **Produces:** closes the smaller gaps that don't need a migration or infra change — JWT claim
 requirements, the temperature-retry false-trigger, and the `</user_data>` fence escape.
 
-- [ ] **6.1 Require `exp`, `iat`, `sub` claims in both decode paths** in `backend/auth.py:66-71`
+- [x] **6.1 Require `exp`, `iat`, `sub` claims in both decode paths** in `backend/auth.py:66-71`
       and `:79-84`. Add `options={"require": ["exp", "iat", "sub"]}` to both `jwt.decode(...)`
       calls.
 

@@ -68,6 +68,7 @@ def get_current_user(
                 signing_key.key,
                 algorithms=list(_ASYMMETRIC),
                 audience="authenticated",
+                options={"require": ["exp", "iat", "sub"]},
             )
         elif alg == "HS256":
             secret = os.environ.get("SUPABASE_JWT_TOKEN")  # JWT signing secret (misnomer; see module docstring)
@@ -81,6 +82,7 @@ def get_current_user(
                 secret,
                 algorithms=["HS256"],
                 audience="authenticated",
+                options={"require": ["exp", "iat", "sub"]},
             )
         else:
             raise HTTPException(status_code=401, detail=f"Unsupported token algorithm: {alg!r}")
