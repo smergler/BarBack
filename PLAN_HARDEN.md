@@ -393,7 +393,7 @@ already-applied migrations.
       current mechanism: detects rejection at runtime via `_supports_temperature`, no
       denylist.
 
-- [ ] **7.3 Expand the matcher entry in `KNOWN_ISSUES.md`** (currently lines 21-30, tie-breaking
+- [x] **7.3 Expand the matcher entry in `KNOWN_ISSUES.md`** (currently lines 21-30, tie-breaking
       only) to note the two defects fixed in Task 1 as resolved-with-date, rather than leaving
       them undocumented: the `campari`→`amaro` cross-identity substitution, and the
       gin/rum/vodka/tequila dead stopword entries. Keep the existing tie-breaking entry as still
