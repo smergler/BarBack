@@ -90,7 +90,7 @@ is the metric `PLAN_EXTEND.md`'s coverage retrieval will be built on top of, and
       — confirm the test fails with `_WEAK_TOKENS = set()` to prove it's load-bearing.
       depends on: 1.4
 
-- [ ] **1.6 Sort the category-fallback iteration** in `recommender/inventory_match.py:77`.
+- [x] **1.6 Sort the category-fallback iteration** in `recommender/inventory_match.py:77`.
       Change `for term in ing:` to `for term in sorted(ing):` so which category term wins when an
       ingredient string contains two is deterministic across process runs (Python's per-process
       string hash randomization otherwise makes this nondeterministic).

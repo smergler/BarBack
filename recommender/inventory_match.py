@@ -77,7 +77,7 @@ def match_bottle(ingredient_name: str, inventory: list[Bottle]) -> Bottle | None
     # must not fall back to a same-category bottle of a different identity
     # (e.g. an owned Campari).
     if ing <= _CATEGORY_TERMS.keys():
-        for term in ing:
+        for term in sorted(ing):
             target_cats = _CATEGORY_TERMS[term]
             for b in inventory:
                 if b.category in target_cats or (b.subcategory and b.subcategory in target_cats):
