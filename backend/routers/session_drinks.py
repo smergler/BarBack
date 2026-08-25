@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -69,4 +70,10 @@ def _apply_feedback(db: DB, drink_row: dict, verdict: str) -> None:
     upsert = db.upsert_companion_like if verdict == "liked" else db.upsert_companion_dislike
     for companion_id in companion_ids:
         for category in sorted(categories):
-            upsert(companion_id, category)
+            try:
+                upsert(companion_id, category)
+            except Exception:
+                logging.exception(
+                    "Failed to apply companion feedback (non-fatal): companion=%s category=%s",
+                    companion_id, category,
+                )

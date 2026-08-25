@@ -208,7 +208,7 @@ verdict endpoint.
       ```
       depends on: 3.1
 
-- [ ] **3.3 Wrap the preference upsert in `_apply_feedback`** in try/except so a rejected RPC
+- [x] **3.3 Wrap the preference upsert in `_apply_feedback`** in try/except so a rejected RPC
       call (e.g. against a not-yet-cleaned-up legacy row, or a race) doesn't turn a successful
       verdict write into a 500. In `backend/routers/session_drinks.py:69-72`:
       ```python
