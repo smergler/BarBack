@@ -20,6 +20,7 @@ from __future__ import annotations
 import os
 import pytest
 from dotenv import load_dotenv
+from postgrest.exceptions import APIError
 
 load_dotenv()  # must run before the skipif condition is evaluated
 
@@ -119,13 +120,12 @@ def test_rls_rpc_isolation():
     companion = db_a.create_companion(companion_name)
     companion_id = companion["id"]
     try:
-        raised = False
-        try:
+        with pytest.raises(APIError) as exc_info:
             db_b.upsert_companion_like(companion_id, "bourbon")
-        except Exception:
-            raised = True
-
-        assert raised, "RLS FAILURE: User B wrote a preference to User A's companion without error"
+        assert exc_info.value.code == "42501", (
+            f"expected insufficient_privilege (42501), got {exc_info.value.code}: "
+            f"{exc_info.value.message}"
+        )
 
         # Confirm no preference row was created for this companion.
         prefs = db_a.list_preferences(companion_id)

@@ -117,7 +117,7 @@ is the metric `PLAN_EXTEND.md`'s coverage retrieval will be built on top of, and
 RPC call failed for any reason," wired into CI so a regression is caught instead of silently
 skipped. This is the sole automated evidence for the milestone's central security claim.
 
-- [ ] **2.1 Fix the assertion in `test_rls_rpc_isolation`** (`tests/test_rls_isolation.py:122-128`).
+- [x] **2.1 Fix the assertion in `test_rls_rpc_isolation`** (`tests/test_rls_isolation.py:122-128`).
       Replace the bare `try/except Exception` with:
       ```python
       from postgrest.exceptions import APIError
