@@ -44,6 +44,11 @@ def test_generic_category_word_alone_does_not_match():
     assert match_bottle("sweet vermouth", inv).name == "Carpano Antica Sweet Vermouth"
 
 
+def test_campari_does_not_match_generic_amaro():
+    inv = INV + [Bottle(id="10", name="Campari", category="liqueur", subcategory="amaro")]
+    assert match_bottle("Amaro Nonino", inv) is None
+
+
 def test_empty_and_stopword_only_names():
     assert match_bottle("", INV) is None
     assert match_bottle("the of and", INV) is None

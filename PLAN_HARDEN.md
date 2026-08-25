@@ -54,7 +54,7 @@ is the metric `PLAN_EXTEND.md`'s coverage retrieval will be built on top of, and
       `"campari": {"amaro"},` entirely, keeping `"amaro": {"amaro"}` as the only amaro entry. An
       ingredient literally named "Amaro Nonino" should no longer match an owned Campari.
 
-- [ ] **1.2 Add `test_campari_does_not_match_generic_amaro`** to `tests/test_inventory_match.py`.
+- [x] **1.2 Add `test_campari_does_not_match_generic_amaro`** to `tests/test_inventory_match.py`.
       Using the module's existing `INV` fixture (which includes `Campari`, category `liqueur`,
       no subcategory set in that local fixture — construct a `Bottle(id="10", name="Campari",
       category="liqueur", subcategory="amaro")` inline to match the eval fixture's shape), assert

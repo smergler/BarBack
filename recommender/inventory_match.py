@@ -71,14 +71,16 @@ def match_bottle(ingredient_name: str, inventory: list[Bottle]) -> Bottle | None
     if best:
         return best[1]
 
-    # Category fallback: if the ingredient's tokens contain a known category
-    # term, match any bottle whose category or subcategory equals that term.
-    for term in ing:
-        if term not in _CATEGORY_TERMS:
-            continue
-        target_cats = _CATEGORY_TERMS[term]
-        for b in inventory:
-            if b.category in target_cats or (b.subcategory and b.subcategory in target_cats):
-                return b
+    # Category fallback: only for genuinely generic asks, where every remaining
+    # token is itself a category word (e.g. "bourbon", "gin"). A specific
+    # product name like "Amaro Nonino" has a non-category token ("nonino") and
+    # must not fall back to a same-category bottle of a different identity
+    # (e.g. an owned Campari).
+    if ing <= _CATEGORY_TERMS.keys():
+        for term in ing:
+            target_cats = _CATEGORY_TERMS[term]
+            for b in inventory:
+                if b.category in target_cats or (b.subcategory and b.subcategory in target_cats):
+                    return b
 
     return None
