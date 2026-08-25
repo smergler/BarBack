@@ -96,7 +96,7 @@ is the metric `PLAN_EXTEND.md`'s coverage retrieval will be built on top of, and
       string hash randomization otherwise makes this nondeterministic).
       depends on: 1.5
 
-- [ ] **1.7 Run the full test suite and offline eval**, confirm green:
+- [x] **1.7 Run the full test suite and offline eval**, confirm green:
       `.venv/bin/python -m pytest -q` and `.venv/bin/python -m evals.run_evals --strict`.
       depends on: 1.6
 
