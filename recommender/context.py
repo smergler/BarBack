@@ -118,9 +118,14 @@ def build_context(req: RecommendRequest, inventory: list[Bottle], use_retrieval:
 
     lines.append("</user_data>")
 
+    context = "\n".join(lines)
+    if len(context) > 20_000:
+        from .recommender import RecommendationError
+        raise RecommendationError("Request context too large")
+
     if use_retrieval and _RETRIEVAL_AVAILABLE:
         query = _retrieval_query(req, inventory)
         retrieved = _search(query, k=5)
-        lines.append(_format_retrieved(retrieved))
+        context += "\n" + _format_retrieved(retrieved)
 
-    return "\n".join(lines)
+    return context

@@ -300,7 +300,7 @@ unbounded-cost gap where `occasion`/`mood` are capped but the list fields aren't
       `from pydantic import StringConstraints` and `from typing import Annotated` to the imports,
       then type both as `list[Annotated[str, StringConstraints(max_length=100)]]`.
 
-- [ ] **5.2 Add a total-prompt-size guard in `build_context`**
+- [x] **5.2 Add a total-prompt-size guard in `build_context`**
       (`recommender/context.py:79`). After assembling `lines` and before the `use_retrieval`
       block (around line 119-120), add:
       ```python
