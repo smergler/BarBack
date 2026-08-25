@@ -61,7 +61,7 @@ is the metric `PLAN_EXTEND.md`'s coverage retrieval will be built on top of, and
       `match_bottle("Amaro Nonino", inv) is None`.
       depends on: 1.1
 
-- [ ] **1.3 Un-strip the four category terms from `_STOPWORDS`** in
+- [x] **1.3 Un-strip the four category terms from `_STOPWORDS`** in
       `recommender/inventory_match.py:22-24`. Remove `"rum"`, `"gin"`, `"vodka"`, `"tequila"`
       from the `_STOPWORDS` set — they're already present as fallback keys in `_CATEGORY_TERMS`
       (lines 39-48), matching the treatment the code already gives `bourbon`/`rye`/`mezcal` per

@@ -23,7 +23,7 @@ def _tokens(s: str) -> set[str]:
 _STOPWORDS = {
     "the", "of", "and", "small", "batch", "bottle",
     "bitters", "vermouth", "liqueur", "syrup",
-    "rum", "gin", "vodka", "whiskey", "whisky", "tequila", "brandy", "cognac",
+    "whiskey", "whisky", "brandy", "cognac",
 }
 
 # Generic fruit/flavor tokens that alone cannot confirm a match. Prevents
