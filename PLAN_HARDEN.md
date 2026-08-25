@@ -134,7 +134,7 @@ skipped. This is the sole automated evidence for the milestone's central securit
       (`supabase/migrations/20260703000000_rpc_ownership_guard.sql:13,30`), so a renamed RPC, a
       network error, or a deleted guard now fails the test instead of passing it.
 
-- [ ] **2.2 Add the missing `TEST_USER_*` vars to `env.template`.**
+- [x] **2.2 Add the missing `TEST_USER_*` vars to `env.template`.**
       Append `TEST_USER_A_EMAIL=`, `TEST_USER_A_PASSWORD=`, `TEST_USER_B_EMAIL=`,
       `TEST_USER_B_PASSWORD=` to `env.template` (currently they're documented only in
       `tests/test_rls_isolation.py`'s docstring, which is why the requirement is easy to miss).
