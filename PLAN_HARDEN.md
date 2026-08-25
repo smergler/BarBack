@@ -349,7 +349,7 @@ requirements, the temperature-retry false-trigger, and the `</user_data>` fence 
           raise
       ```
 
-- [ ] **6.4 Escape the `<user_data>` fence delimiter** in `recommender/context.py`. Add a helper
+- [x] **6.4 Escape the `<user_data>` fence delimiter** in `recommender/context.py`. Add a helper
       near the top of the file:
       ```python
       def _inert(s: str) -> str:

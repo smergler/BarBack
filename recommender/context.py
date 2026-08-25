@@ -47,6 +47,10 @@ Respond with ONLY a JSON object of this shape, no prose:
 {"suggestions":[{"name": "...","description":"...","ingredients":[{"name":"...","quantity":"...","source":"inventory|pantry|perishable|missing"}],"steps":["..."],"why":"...","suited_for":["me","companion name"]}]}"""
 
 
+def _inert(s: str) -> str:
+    return s.replace("<", "‹").replace(">", "›")
+
+
 def _retrieval_query(req: RecommendRequest, inventory: list[Bottle]) -> str:
     parts = [req.occasion]
     if req.mood:
@@ -79,19 +83,20 @@ def _format_retrieved(recipes: list) -> str:
 def build_context(req: RecommendRequest, inventory: list[Bottle], use_retrieval: bool = False) -> str:
     lines: list[str] = ["<user_data>"]
 
-    lines.append(f"Occasion: {req.occasion}")
+    lines.append(f"Occasion: {_inert(req.occasion)}")
     if req.mood:
-        lines.append(f"Mood/vibe: {req.mood}")
+        lines.append(f"Mood/vibe: {_inert(req.mood)}")
     lines.append(f"Number of suggestions wanted: {req.count}")
 
     lines.append("\nBottles the user owns:")
     for b in inventory:
-        sub = f" / {b.subcategory}" if b.subcategory else ""
-        lines.append(f"- {b.name} [{b.category}{sub}]")
+        sub = f" / {_inert(b.subcategory)}" if b.subcategory else ""
+        lines.append(f"- {_inert(b.name)} [{_inert(b.category)}{sub}]")
 
     if req.available_perishables:
         lines.append(
-            "\nFresh ingredients on hand: " + ", ".join(req.available_perishables)
+            "\nFresh ingredients on hand: "
+            + ", ".join(_inert(p) for p in req.available_perishables)
         )
     else:
         lines.append("\nFresh ingredients on hand: none confirmed")
@@ -99,22 +104,22 @@ def build_context(req: RecommendRequest, inventory: list[Bottle], use_retrieval:
     if req.companions:
         lines.append("\nDrinking companions:")
         for c in req.companions:
-            likes = ", ".join(c.likes) or "—"
-            dislikes = ", ".join(c.dislikes) or "—"
-            lines.append(f"- {c.name}: likes {likes}; dislikes {dislikes}")
+            likes = ", ".join(_inert(x) for x in c.likes) or "—"
+            dislikes = ", ".join(_inert(x) for x in c.dislikes) or "—"
+            lines.append(f"- {_inert(c.name)}: likes {likes}; dislikes {dislikes}")
 
     if req.constraints:
-        lines.append("\nConstraints: " + "; ".join(req.constraints))
+        lines.append("\nConstraints: " + "; ".join(_inert(x) for x in req.constraints))
 
     if req.already_suggested:
         lines.append("\nDrinks already suggested this session — do NOT suggest these again:")
         for name in req.already_suggested:
-            lines.append(f"- {name}")
+            lines.append(f"- {_inert(name)}")
 
     if req.session_feedback:
         lines.append("\nFeedback from this session:")
         for fb in req.session_feedback:
-            lines.append(f"- {fb.name}: {fb.verdict}")
+            lines.append(f"- {_inert(fb.name)}: {fb.verdict}")
 
     lines.append("</user_data>")
 
