@@ -407,7 +407,7 @@ already-applied migrations.
       cross-check, not a rewrite.
       depends on: 2.2
 
-- [ ] **7.5 Narrow the open version ranges in `requirements.txt`.**
+- [x] **7.5 Narrow the open version ranges in `requirements.txt`.**
       Change `supabase>=2.0` to `supabase>=2.0,<3.0`, `fastapi>=0.115` to `fastapi>=0.115,<1.0`,
       `PyJWT>=2.8` to `PyJWT>=2.8,<3.0`, `uvicorn[standard]>=0.30` to
       `uvicorn[standard]>=0.30,<1.0`. Matches the shape already used for the `anthropic` pin
