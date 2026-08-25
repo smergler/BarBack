@@ -386,7 +386,7 @@ already-applied migrations.
       forward. Add a one-line comment above the functions: `-- Superseded by
       20260703000000_rpc_ownership_guard.sql; do not re-add the guard here.`
 
-- [ ] **7.2 Fix the stale claim in `RESUME_STORY.md:229`.**
+- [x] **7.2 Fix the stale claim in `RESUME_STORY.md:229`.**
       It currently reads "Fixed by adding `_MODELS_WITHOUT_TEMPERATURE` frozenset and
       `_base_params()` helper." Commit `3ad74f1` deleted that frozenset in favor of runtime
       detection (see `recommender/llm.py:57,60-64,71-75`). Update the line to describe the

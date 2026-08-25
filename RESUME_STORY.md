@@ -226,7 +226,7 @@ auth-required test, happy path, and relevant error paths (404, 409, 422).
 
 **The insight worth articulating:** bigger models aren't always better — task shape matters. This is a constraint-satisfaction problem (use what's in inventory), not a creative writing or reasoning problem. Haiku, being more "literal," respects the constraints better; Sonnet and Opus pattern-match to "good cocktail recipes" and overreach. The eval harness is what revealed this — without it, the obvious call would be "use the best model."
 
-**Engineering note:** one bug caught during sweep implementation — Opus 4.8+ rejects the `temperature` parameter (deprecated). Fixed by adding `_MODELS_WITHOUT_TEMPERATURE` frozenset and `_base_params()` helper that conditionally omits it. This is exactly the kind of silent breaking change a sweep harness catches automatically.
+**Engineering note:** one bug caught during sweep implementation — Opus 4.8+ rejects the `temperature` parameter (deprecated). Fixed by detecting the rejection at runtime: `AnthropicClient` tracks a `_supports_temperature` flag (`recommender/llm.py:57`), and `_base_params()` (`:60-64`) omits `temperature` once a call has failed with an API-shape marker matching a temperature-rejection error (`:71-75`) — no hardcoded model denylist to keep in sync. This is exactly the kind of silent breaking change a sweep harness catches automatically.
 
 **Interview line:** "The sweep showed Haiku outperforms Opus on this task — it's both cheaper and better. Bigger models over-specify; they suggest great cocktails that need ingredients you don't own. Without the eval harness I wouldn't have known — the obvious engineering choice is always 'use the best model.'"
 
