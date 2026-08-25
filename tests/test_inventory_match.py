@@ -99,3 +99,14 @@ def test_gin_rum_vodka_tequila_category_fallback():
     assert match_bottle("rum", inv).name == "Diplomatico Reserva"
     assert match_bottle("vodka", inv).name == "Tito's Handmade"
     assert match_bottle("tequila", inv).name == "Espolòn Blanco"
+
+
+def test_weak_token_prevents_false_name_match():
+    # "aged" overlaps "Aged Rum Reserve"'s name tokens at score 0.5 (passes the
+    # 0.5 threshold), but "aged" is in _WEAK_TOKENS so the name-match is
+    # rejected; category fallback doesn't apply either ("aged" isn't a
+    # category word, so "aged tequila" isn't a purely generic ask), so the
+    # result is correctly None. If _WEAK_TOKENS were emptied, this ingredient
+    # would wrongly match "Aged Rum Reserve" via the name-overlap path.
+    inv = INV + [Bottle(id="15", name="Aged Rum Reserve", category="rum")]
+    assert match_bottle("aged tequila", inv) is None

@@ -79,7 +79,7 @@ is the metric `PLAN_EXTEND.md`'s coverage retrieval will be built on top of, and
       confirm the test fails on the pre-1.3 code to prove it actually exercises the fallback.
       depends on: 1.3
 
-- [ ] **1.5 Add `test_weak_token_prevents_false_name_match`** to `tests/test_inventory_match.py`.
+- [x] **1.5 Add `test_weak_token_prevents_false_name_match`** to `tests/test_inventory_match.py`.
       Build `inv = INV + [Bottle(id="15", name="Aged Rum Reserve", category="rum")]` (no tequila
       bottle in `inv`). Assert `match_bottle("aged tequila", inv) is None`. Add a comment
       explaining why: `"aged"` overlaps `"Aged Rum Reserve"`'s name tokens at score 0.5 (passes
