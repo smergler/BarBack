@@ -69,7 +69,11 @@ class AnthropicClient:
         try:
             return client.messages.create(**self._base_params(), **kwargs)
         except (TypeError, BadRequestError) as e:
-            if not self._supports_temperature or "temperature" not in str(e):
+            msg = str(e)
+            is_temperature_error = "temperature" in msg and (
+                "unexpected keyword" in msg or "Extra inputs" in msg or "unsupported" in msg.lower()
+            )
+            if not self._supports_temperature or not is_temperature_error:
                 raise
             self._supports_temperature = False
             return client.messages.create(**self._base_params(), **kwargs)

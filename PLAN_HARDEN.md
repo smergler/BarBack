@@ -336,7 +336,7 @@ requirements, the temperature-retry false-trigger, and the `</user_data>` fence 
       (Supabase's standard issuer format — confirm against an actual decoded token's `iss` claim
       during 6.4's verification step, adjust the format string if it differs).
 
-- [ ] **6.3 Tighten the temperature-error match** in `recommender/llm.py:72`. Replace
+- [x] **6.3 Tighten the temperature-error match** in `recommender/llm.py:72`. Replace
       `if not self._supports_temperature or "temperature" not in str(e):` with a check that also
       requires an API-shape marker, not just the literal word appearing anywhere in the message
       (which user-controlled prompt content can trigger via an unrelated 400):
