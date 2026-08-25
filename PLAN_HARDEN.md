@@ -177,7 +177,7 @@ skipped. This is the sole automated evidence for the milestone's central securit
 rows written before the guard existed, and stops a legacy foreign-companion row from crashing the
 verdict endpoint.
 
-- [ ] **3.1 Add companion-ownership to the `session_companions` RLS policy.**
+- [x] **3.1 Add companion-ownership to the `session_companions` RLS policy.**
       Create `supabase/migrations/20260710000000_session_companions_ownership.sql`:
       ```sql
       DROP POLICY IF EXISTS "own session_companions" ON session_companions;
