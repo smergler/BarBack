@@ -400,7 +400,7 @@ already-applied migrations.
       open (Task 1 didn't fix iteration-order ties among same-category bottles, only made the
       category-term iteration itself deterministic).
 
-- [ ] **7.4 Add the remaining `TEST_USER_*` env var references check** — confirm
+- [x] **7.4 Add the remaining `TEST_USER_*` env var references check** — confirm
       `tests/test_rls_isolation.py:29` and `env.template` (post-2.2) now agree on the variable
       name `SUPABASE_JWT_TOKEN`, consistent with the misnomer note already added to
       `backend/auth.py:6-7`. No code change expected if 2.2 was done correctly; this is a
