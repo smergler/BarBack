@@ -314,7 +314,7 @@ unbounded-cost gap where `occasion`/`mood` are capped but the list fields aren't
       `recommender/recommender.py` instead of `ValueError` if that's the established error type
       for this module — check `recommender/recommender.py` for the pattern before choosing.
 
-- [ ] **5.3 Add `tests/test_context_bounds.py`** — one test posting a `RecommendRequest` with 25
+- [x] **5.3 Add `tests/test_context_bounds.py`** — one test posting a `RecommendRequest` with 25
       items in `constraints` and asserting Pydantic validation rejects it (`ValidationError`);
       one test with 19 short constraints plus one 25,000-character `occasion`-adjacent field
       combination that pushes total context past 20,000 chars, asserting `build_context` raises.
