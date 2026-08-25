@@ -331,7 +331,7 @@ requirements, the temperature-retry false-trigger, and the `</user_data>` fence 
       and `:79-84`. Add `options={"require": ["exp", "iat", "sub"]}` to both `jwt.decode(...)`
       calls.
 
-- [ ] **6.2 Add `issuer` validation** to the same two `jwt.decode(...)` calls in `backend/auth.py`.
+- [x] **6.2 Add `issuer` validation** to the same two `jwt.decode(...)` calls in `backend/auth.py`.
       Add `issuer=f"{os.environ['SUPABASE_PROJECT_URL'].rstrip('/')}/auth/v1"` as a kwarg to both
       (Supabase's standard issuer format — confirm against an actual decoded token's `iss` claim
       during 6.4's verification step, adjust the format string if it differs).

@@ -68,6 +68,7 @@ def get_current_user(
                 signing_key.key,
                 algorithms=list(_ASYMMETRIC),
                 audience="authenticated",
+                issuer=f"{url.rstrip('/')}/auth/v1",
                 options={"require": ["exp", "iat", "sub"]},
             )
         elif alg == "HS256":
@@ -77,11 +78,18 @@ def get_current_user(
                     status_code=503,
                     detail="Auth not configured (SUPABASE_JWT_TOKEN missing)",
                 )
+            url = os.environ.get("SUPABASE_PROJECT_URL")
+            if not url:
+                raise HTTPException(
+                    status_code=503,
+                    detail="Auth not configured (SUPABASE_PROJECT_URL missing)",
+                )
             payload = jwt.decode(
                 token,
                 secret,
                 algorithms=["HS256"],
                 audience="authenticated",
+                issuer=f"{url.rstrip('/')}/auth/v1",
                 options={"require": ["exp", "iat", "sub"]},
             )
         else:
