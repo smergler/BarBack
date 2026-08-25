@@ -68,7 +68,7 @@ is the metric `PLAN_EXTEND.md`'s coverage retrieval will be built on top of, and
       the comment at line 19-21. Leave `"whiskey"`, `"whisky"`, `"brandy"`, `"cognac"` in
       `_STOPWORDS` — they have no `_CATEGORY_TERMS` entry, so stripping them is still correct.
 
-- [ ] **1.4 Add `test_gin_rum_vodka_tequila_category_fallback`** to `tests/test_inventory_match.py`.
+- [x] **1.4 Add `test_gin_rum_vodka_tequila_category_fallback`** to `tests/test_inventory_match.py`.
       Build a local inventory with one bottle per spirit not already in `INV` — e.g.
       `Bottle(id="11", name="Hendrick's Gin", category="gin")`,
       `Bottle(id="12", name="Diplomatico Reserva", category="rum")`,

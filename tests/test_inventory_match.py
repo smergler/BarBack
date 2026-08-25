@@ -83,3 +83,19 @@ def test_peychauds_bitters_does_not_match():
     # "Peychaud's Bitters" → tokens = {"peychauds"} (bitters is stopword)
     # No owned bottle has "peychauds" in its name tokens.
     assert match_bottle("Peychaud's Bitters", EVAL_INV) is None
+
+
+def test_gin_rum_vodka_tequila_category_fallback():
+    # None of these ingredient names overlap the owned bottles' name tokens —
+    # only the category fallback (now that rum/gin/vodka/tequila are no
+    # longer stripped as stopwords) can ground them.
+    inv = [
+        Bottle(id="11", name="Hendrick's Gin", category="gin"),
+        Bottle(id="12", name="Diplomatico Reserva", category="rum"),
+        Bottle(id="13", name="Tito's Handmade", category="vodka"),
+        Bottle(id="14", name="Espolòn Blanco", category="tequila"),
+    ]
+    assert match_bottle("gin", inv).name == "Hendrick's Gin"
+    assert match_bottle("rum", inv).name == "Diplomatico Reserva"
+    assert match_bottle("vodka", inv).name == "Tito's Handmade"
+    assert match_bottle("tequila", inv).name == "Espolòn Blanco"
