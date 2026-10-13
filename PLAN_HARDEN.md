@@ -371,7 +371,7 @@ requirements, the temperature-retry false-trigger, and the `</user_data>` fence 
 
 ---
 
-## Task 7 — Doc and migration hygiene
+## Task 7 — Doc and migration hygiene ✅
 
 **Produces:** closes the gap between what the docs claim and what's true, and stops editing
 already-applied migrations.
