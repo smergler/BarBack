@@ -376,7 +376,7 @@ requirements, the temperature-retry false-trigger, and the `</user_data>` fence 
 **Produces:** closes the gap between what the docs claim and what's true, and stops editing
 already-applied migrations.
 
-- [ ] **7.1 Revert the guard retrofit in the init migration.**
+- [x] **7.1 Revert the guard retrofit in the init migration.**
       In `supabase/migrations/20260622000000_init.sql:148-181`, the two `CREATE OR REPLACE
       FUNCTION` blocks (`upsert_companion_like`, `upsert_companion_dislike`) are a byte-for-byte
       duplicate of `supabase/migrations/20260703000000_rpc_ownership_guard.sql`. Revert them back

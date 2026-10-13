@@ -146,18 +146,13 @@ CREATE POLICY "own session_drinks" ON session_drinks
 -- (the calling endpoint validates companion ownership first).
 -- ============================================================
 
+-- Superseded by 20260703000000_rpc_ownership_guard.sql; do not re-add the guard here.
 CREATE OR REPLACE FUNCTION upsert_companion_like(
   p_companion_id uuid,
   p_value        text
-) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
+) RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM public.companions WHERE id = p_companion_id AND user_id = auth.uid()
-  ) THEN
-    RAISE EXCEPTION 'not authorized for companion %', p_companion_id USING ERRCODE = '42501';
-  END IF;
-
-  INSERT INTO public.companion_preferences(companion_id, type, value)
+  INSERT INTO companion_preferences(companion_id, type, value)
   VALUES (p_companion_id, 'like', p_value)
   ON CONFLICT (companion_id, value) DO UPDATE SET type = 'like';
 END;
@@ -166,15 +161,9 @@ $$;
 CREATE OR REPLACE FUNCTION upsert_companion_dislike(
   p_companion_id uuid,
   p_value        text
-) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
+) RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM public.companions WHERE id = p_companion_id AND user_id = auth.uid()
-  ) THEN
-    RAISE EXCEPTION 'not authorized for companion %', p_companion_id USING ERRCODE = '42501';
-  END IF;
-
-  INSERT INTO public.companion_preferences(companion_id, type, value)
+  INSERT INTO companion_preferences(companion_id, type, value)
   VALUES (p_companion_id, 'dislike', p_value)
   ON CONFLICT (companion_id, value) DO UPDATE SET type = 'dislike';
 END;
