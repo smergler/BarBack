@@ -15,6 +15,7 @@ import os
 import time
 from pathlib import Path
 
+import jwt
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -40,7 +41,24 @@ from recommender.schemas import (
 
 load_dotenv()
 
-limiter = Limiter(key_func=get_remote_address, default_limits=["20/minute"])
+def _rate_limit_key(request: Request) -> str:
+    """Bucket per caller. Behind Railway's proxy, request.client.host is a pooled
+    internal address (100.64.x.x), so IP keying shares/splits buckets arbitrarily.
+
+    The decode is intentionally unverified: the limiter only needs a stable key.
+    On /recommend, get_current_user verifies the token before this limiter runs, so a
+    forged `sub` is rejected with 401 and never consumes the victim's bucket.
+    """
+    auth = request.headers.get("authorization", "")
+    if auth.startswith("Bearer "):
+        try:
+            return jwt.decode(auth[7:], options={"verify_signature": False})["sub"]
+        except Exception:
+            pass
+    return get_remote_address(request)
+
+
+limiter = Limiter(key_func=_rate_limit_key, default_limits=["20/minute"])
 
 app = FastAPI(title="BarBack")
 app.state.limiter = limiter
@@ -60,9 +78,7 @@ app.include_router(session_drinks.router)
 
 
 @app.get("/health")
-def health(request: Request) -> dict:
-    # TEMPORARY (PLAN_HARDEN 4.1): remove after comparing client IPs from two networks.
-    logging.warning("client=%s xff=%s", request.client.host, request.headers.get("x-forwarded-for"))
+def health() -> dict:
     return {"status": "ok"}
 
 

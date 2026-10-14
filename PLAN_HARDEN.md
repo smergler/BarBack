@@ -240,19 +240,19 @@ verdict endpoint.
 
 ---
 
-## Task 4 — Rate limiter key
+## Task 4 — Rate limiter key ✅
 
 **Produces:** confirms whether `/recommend`'s rate limit is a shared global bucket (Railway proxy
 IP) or per-client, and fixes it if so.
 
-- [ ] **4.1 Confirm the proxy-IP behavior in production.**
+- [x] **4.1 Confirm the proxy-IP behavior in production.**
       Requires human: needs a live Railway deployment and two different client networks to
       compare. Deploy current `main`, hit `GET /health` from two different networks, and compare
       logged `request.client.host` (add a temporary `logging.info(f"client={request.client.host}")`
       to the `/health` handler in `app/main.py:62-64` for this check, then remove it once
       confirmed either way).
 
-- [ ] **4.2 If step 4.1 confirms a constant IP, key the limiter on the authenticated subject.**
+- [x] **4.2 If step 4.1 confirms a constant IP, key the limiter on the authenticated subject.**
       In `app/main.py`, add a `_rate_limit_key` function above the `limiter` assignment:
       ```python
       def _rate_limit_key(request: Request) -> str:
@@ -271,7 +271,7 @@ IP) or per-client, and fixes it if so.
       lets an attacker share a rate-limit bucket with the token's real owner, not bypass auth.
       depends on: 4.1
 
-- [ ] **4.3 Add `tests/test_rate_limit_key.py`** asserting `_rate_limit_key` returns the JWT
+- [x] **4.3 Add `tests/test_rate_limit_key.py`** asserting `_rate_limit_key` returns the JWT
       `sub` claim for a request with a well-formed (unsigned-check) Bearer token, and falls back
       to `get_remote_address`'s value for a request with no `Authorization` header.
       depends on: 4.2
