@@ -100,7 +100,7 @@ is the metric `PLAN_EXTEND.md`'s coverage retrieval will be built on top of, and
       `.venv/bin/python -m pytest -q` and `.venv/bin/python -m evals.run_evals --strict`.
       depends on: 1.6
 
-- [ ] **1.8 Re-run the live eval and update published numbers.**
+- [x] **1.8 Re-run the live eval and update published numbers.**
       Requires human: needs `ANTHROPIC_API_KEY`, spends tokens, and the resulting makeable-rate
       number must be read and judged before publishing — run
       `.venv/bin/python -m evals.run_evals --live --judge --strict`, then update the makeable-rate

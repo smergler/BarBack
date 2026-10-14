@@ -36,7 +36,7 @@ The recommender is graded by a measurement harness, not vibes:
 | Live baseline after prompt tightening | 100% | — | — | Grounding failure → pantry boundary fix → metric moved. |
 | Mock baseline, current 14 scenarios (+ adversarial) | 59% | 89% | 58% | Lower grounding% expected: adversarial scenarios are designed to catch violations. |
 | **Live run** (claude-haiku-4-5, historical 12-scenario set) | **100%** | **94%** | **75%** | JUDGE: constraints 74%, occasion fit 4.6/5, plausibility 4.4/5, name accuracy 58% — model grounds perfectly but misnames ~42% of drinks. |
-| **Live run — post matcher fix** (haiku, all 14 scenarios, pinned judge) | **100%** | **100%** | **79%** | JUDGE: constraints 77%, occasion fit 4.5/5, plausibility 4.7/5, name accuracy 68%. Makeable hit 100%: category-fallback matcher anchors generic spirit names in owned bottles. |
+| **Live run — after HARDEN matcher fixes** (haiku, all 14 scenarios, pinned judge, 2 runs 2026-10-13, range shown) | **100%** | **100%** | **74–79%** | JUDGE: constraints 82–86%, occasion fit 4.4–4.5/5, plausibility 4.7–4.9/5, name accuracy 64–68%, companion targeting 3.2/5 (n=4 per run). Makeable stayed 100% in both runs after removing the campari→amaro substitution and restoring gin/rum/vodka/tequila category fallback, so the earlier figure was not inflated by those bugs. Every makeable-now miss was a genuinely unowned item (bitters, ginger beer, Campari, vermouth, absinthe, Peychaud's). Two single runs differ by up to 5pp, so treat these as ranges; "makeable" only requires one owned bottle, "makeable-now" requires no missing ingredients. |
 
 _See [`RESUME_STORY.md`](RESUME_STORY.md) for the full story including why 59% grounding mock ≠ regression._
 
