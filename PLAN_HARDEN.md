@@ -231,7 +231,7 @@ verdict endpoint.
       `_apply_feedback`). Follow the existing mocking pattern in `tests/test_recommend_endpoint.py`.
       depends on: 3.3
 
-- [ ] **3.5 Apply the migration to production.**
+- [x] **3.5 Apply the migration to production.**
       Requires human: runs against the live Supabase project via the Dashboard SQL Editor, per
       this project's existing manual-apply workflow (there is no `supabase db push` in CI). Apply
       `supabase/migrations/20260710000000_session_companions_ownership.sql`, then spot-check that

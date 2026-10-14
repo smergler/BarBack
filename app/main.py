@@ -60,7 +60,9 @@ app.include_router(session_drinks.router)
 
 
 @app.get("/health")
-def health() -> dict:
+def health(request: Request) -> dict:
+    # TEMPORARY (PLAN_HARDEN 4.1): remove after comparing client IPs from two networks.
+    logging.warning("client=%s xff=%s", request.client.host, request.headers.get("x-forwarded-for"))
     return {"status": "ok"}
 
 
