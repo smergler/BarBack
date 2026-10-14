@@ -195,12 +195,13 @@ MOCK_RESPONSES: dict[str, str] = {
 ]}""",
 
     # Single companion drink, suited_for uses only "me" and "Jamie".
+    # soda water is perishable (varies household to household), not a pantry staple.
     "companion_bitter_only": """
 {"suggestions":[
   {"name":"Campari Spritz","description":"Bitter and refreshing.",
    "ingredients":[
      {"name":"Campari","quantity":"2 oz","source":"inventory"},
-     {"name":"soda water","quantity":"3 oz","source":"pantry"},
+     {"name":"soda water","quantity":"3 oz","source":"perishable"},
      {"name":"orange peel","quantity":"1","source":"perishable"}],
    "steps":["Build in a glass","Stir gently"],
    "why":"Classic bitter aperitivo — exactly Jamie's style.",

@@ -30,15 +30,16 @@ class MockClient:
         return self._responses[self._key]
 
 
-# Models that rejected the `temperature` parameter (Opus 4.6+ family, Fable).
-_MODELS_WITHOUT_TEMPERATURE = frozenset({
-    "claude-opus-4-6", "claude-opus-4-7", "claude-opus-4-8",
-    "claude-fable-5", "claude-mythos-5",
-})
-
-
 class AnthropicClient:
-    """Live client that calls the Anthropic Messages API."""
+    """Live client that calls the Anthropic Messages API.
+
+    `temperature` support varies by model and by installed `anthropic` SDK
+    version (some releases drop it from `Messages.create()`'s signature
+    entirely; some models reject it server-side). Rather than hardcoding a
+    model-name denylist that goes stale every time either side changes, we
+    detect rejection on first use and stop sending it for the rest of this
+    client's lifetime.
+    """
 
     DEFAULT_MODEL = "claude-haiku-4-5-20251001"
 
@@ -53,23 +54,35 @@ class AnthropicClient:
         self._model = model or self.DEFAULT_MODEL
         self._max_tokens = max_tokens
         self._temperature = temperature
+        self._supports_temperature = True
         self.last_usage: UsageStats | None = None
 
     def _base_params(self) -> dict[str, Any]:
         params: dict[str, Any] = {"model": self._model, "max_tokens": self._max_tokens}
-        if self._model not in _MODELS_WITHOUT_TEMPERATURE:
+        if self._supports_temperature:
             params["temperature"] = self._temperature
         return params
+
+    def _create(self, client: Any, **kwargs: Any) -> Any:
+        from anthropic import BadRequestError
+
+        try:
+            return client.messages.create(**self._base_params(), **kwargs)
+        except (TypeError, BadRequestError) as e:
+            msg = str(e)
+            is_temperature_error = "temperature" in msg and (
+                "unexpected keyword" in msg or "Extra inputs" in msg or "unsupported" in msg.lower()
+            )
+            if not self._supports_temperature or not is_temperature_error:
+                raise
+            self._supports_temperature = False
+            return client.messages.create(**self._base_params(), **kwargs)
 
     def generate(self, system: str, user: str) -> str:
         from anthropic import Anthropic  # lazy import; optional dependency
 
         client = Anthropic(api_key=self._api_key)
-        msg = client.messages.create(
-            **self._base_params(),
-            system=system,
-            messages=[{"role": "user", "content": user}],
-        )
+        msg = self._create(client, system=system, messages=[{"role": "user", "content": user}])
         self.last_usage = UsageStats(
             input_tokens=msg.usage.input_tokens,
             output_tokens=msg.usage.output_tokens,
@@ -81,8 +94,8 @@ class AnthropicClient:
         from anthropic import Anthropic  # lazy import; optional dependency
 
         client = Anthropic(api_key=self._api_key)
-        msg = client.messages.create(
-            **self._base_params(),
+        msg = self._create(
+            client,
             system=system,
             messages=[{"role": "user", "content": user}],
             output_config={"format": {"type": "json_schema", "schema": schema}},

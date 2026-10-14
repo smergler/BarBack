@@ -20,6 +20,7 @@ from __future__ import annotations
 import os
 import pytest
 from dotenv import load_dotenv
+from postgrest.exceptions import APIError
 
 load_dotenv()  # must run before the skipif condition is evaluated
 
@@ -101,6 +102,35 @@ def test_rls_companion_isolation():
         b_names = [c["name"] for c in db_b.list_companions(limit=200, offset=0)]
         assert companion_name not in b_names, (
             f"RLS FAILURE: User B can read User A's companion '{companion_name}'"
+        )
+    finally:
+        db_a.delete_companion(companion_id)
+
+
+@live_rls
+def test_rls_rpc_isolation():
+    """User B cannot write preferences to User A's companion via the guarded RPCs."""
+    from backend.db import DB
+
+    jwt_a = _sign_in(os.environ["TEST_USER_A_EMAIL"], os.environ["TEST_USER_A_PASSWORD"])
+    jwt_b = _sign_in(os.environ["TEST_USER_B_EMAIL"], os.environ["TEST_USER_B_PASSWORD"])
+    db_a, db_b = DB(jwt_a), DB(jwt_b)
+
+    companion_name = f"rls-rpc-{os.getpid()}"
+    companion = db_a.create_companion(companion_name)
+    companion_id = companion["id"]
+    try:
+        with pytest.raises(APIError) as exc_info:
+            db_b.upsert_companion_like(companion_id, "bourbon")
+        assert exc_info.value.code == "42501", (
+            f"expected insufficient_privilege (42501), got {exc_info.value.code}: "
+            f"{exc_info.value.message}"
+        )
+
+        # Confirm no preference row was created for this companion.
+        prefs = db_a.list_preferences(companion_id)
+        assert not prefs, (
+            f"RLS FAILURE: preference row exists on User A's companion after User B's attempt: {prefs}"
         )
     finally:
         db_a.delete_companion(companion_id)

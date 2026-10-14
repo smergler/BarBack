@@ -60,7 +60,9 @@ app.include_router(session_drinks.router)
 
 
 @app.get("/health")
-def health() -> dict:
+def health(request: Request) -> dict:
+    # TEMPORARY (PLAN_HARDEN 4.1): remove after comparing client IPs from two networks.
+    logging.warning("client=%s xff=%s", request.client.host, request.headers.get("x-forwarded-for"))
     return {"status": "ok"}
 
 
@@ -92,9 +94,6 @@ def recommend_drinks(
 
     db = DB(creds.credentials)
 
-    # Validate companion ownership if profiles were provided by name
-    # (Future: accept companion_ids; for now trust CompanionProfile names from request)
-
     # Fetch real inventory from DB
     db_bottles = db.list_bottles(include_inactive=False, limit=1000, offset=0)
     if not db_bottles:
@@ -104,6 +103,13 @@ def recommend_drinks(
         Bottle(id=b["id"], name=b["name"], category=b["category"], subcategory=b.get("subcategory"))
         for b in db_bottles
     ]
+
+    # Reject companion IDs that don't belong to the authenticated user.
+    if req.companion_ids:
+        owned = db.list_companion_ids()
+        foreign = [cid for cid in req.companion_ids if cid not in owned]
+        if foreign:
+            raise HTTPException(status_code=400, detail="One or more companion IDs are not yours")
 
     # Get or create the active session before recommend() so we can fetch
     # prior drinks and pass them as context (deduplication + in-session feedback).
@@ -132,7 +138,7 @@ def recommend_drinks(
     result = recommend(req, inventory_bottles, llm)
     latency_ms = round((time.perf_counter() - t0) * 1000)
 
-    # Save suggested drinks as session_drinks
+    # Save suggested drinks as session_drinks; capture inserted IDs for the response.
     drinks_payload = [
         {
             "name": s.name,
@@ -143,7 +149,8 @@ def recommend_drinks(
         }
         for s in result.suggestions
     ]
-    db.create_session_drinks(session_id, drinks_payload)
+    created_drinks = db.create_session_drinks(session_id, drinks_payload)
+    drink_ids = [d["id"] for d in created_drinks] if created_drinks else []
 
     # Write telemetry — non-fatal if it fails (e.g. DB unavailable).
     if llm.last_usage is not None:
@@ -158,8 +165,10 @@ def recommend_drinks(
         except Exception:
             logging.exception("Failed to write session telemetry (non-fatal)")
 
+    body = result.model_dump()
+    body["drink_ids"] = drink_ids
     response = JSONResponse(
-        content=result.model_dump(),
+        content=body,
         headers={"X-Session-Id": session_id},
     )
     return response

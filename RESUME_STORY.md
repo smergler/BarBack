@@ -16,7 +16,7 @@ deterministic **eval harness** that measures and protects recommendation quality
 ## The metrics timeline (the spine of the story)
 
 _All "mock" numbers are from offline runs with seeded-violation stubs — no tokens spent.
-"Current" refers to the 12-scenario set including 4 adversarial named-classic scenarios added later._
+"Current" refers to the 14-scenario set including 4 adversarial named-classic scenarios and 2 companion-targeting scenarios._
 
 | Milestone | Grounding | Makeable | Makeable-now | Notes |
 |---|---|---|---|---|
@@ -24,8 +24,9 @@ _All "mock" numbers are from offline runs with seeded-violation stubs — no tok
 | **Live baseline** (claude-haiku-4-5), original 8 scenarios | **91%** | — | — | 10/11 grounded. Failure: model labeled honey/cinnamon as `pantry` (over-assumed on-hand). |
 | After tightening the pantry system prompt | **100%** | — | — | Model now flags honey/spices as `perishable` ("grab these"). Real before/after. |
 | Live + 4 adversarial classics added (Negroni w/o gin, Sazerac, Mai Tai, count=5 from 3 bottles) | **100% grounded** | — | — | Model flags, doesn't fake — substitutes or marks `missing`. But see below: grounding ≠ makeable. |
-| Mock baseline — current 12-scenario set + makeable metric added | **53%** | **88%** | **50%** | Lower grounding% expected: adversarial scenarios drag the mock average down (they're designed to catch violations). Makeable 88% means most open-ended suggestions are anchored in ≥1 owned bottle. |
-| **Live run** (claude-haiku-4-5, all 12 scenarios, + judge) | **100%** | **94%** | **75%** | JUDGE: constraints respected 74%, occasion fit 4.6/5, recipe plausibility 4.4/5, **name accuracy 58%** — model grounds correctly but misnames ~42% of drinks (e.g. calls a Boulevardier a "Negroni"). Next lever: name-accuracy prompt work or structured output with canonical name validation. |
+| Mock baseline — current 14-scenario set + makeable metric added | **59%** | **89%** | **58%** | Lower grounding% expected: adversarial scenarios drag the mock average down (they're designed to catch violations). Makeable 89% means most open-ended suggestions are anchored in ≥1 owned bottle. |
+| **Live run** (claude-haiku-4-5, historical 12-scenario set, + judge) | **100%** | **94%** | **75%** | JUDGE: constraints respected 74%, occasion fit 4.6/5, recipe plausibility 4.4/5, **name accuracy 58%** — model grounds correctly but misnames ~42% of drinks (e.g. calls a Boulevardier a "Negroni"). Next lever: name-accuracy prompt work or structured output with canonical name validation. |
+| **Live run — after HARDEN matcher fixes** (haiku, all 14 scenarios, pinned judge, 2 runs 2026-10-13, range shown) | **100%** | **100%** | **74–79%** | JUDGE: constraints 82–86%, occasion fit 4.4–4.5/5, plausibility 4.7–4.9/5, name accuracy 64–68%, companion targeting 3.2/5 (n=4 per run). Makeable stayed 100% in both runs after removing the campari→amaro substitution and restoring gin/rum/vodka/tequila category fallback, so the earlier figure was not inflated by those bugs. Every makeable-now miss was a genuinely unowned item (bitters, ginger beer, Campari, vermouth, absinthe, Peychaud's). Two single runs differ by up to 5pp, so treat these as ranges; "makeable" only requires one owned bottle, "makeable-now" requires no missing ingredients. |
 
 ## Engineering decisions worth talking about (the "why" matters more than the "what")
 
@@ -225,13 +226,15 @@ auth-required test, happy path, and relevant error paths (404, 409, 422).
 
 **The insight worth articulating:** bigger models aren't always better — task shape matters. This is a constraint-satisfaction problem (use what's in inventory), not a creative writing or reasoning problem. Haiku, being more "literal," respects the constraints better; Sonnet and Opus pattern-match to "good cocktail recipes" and overreach. The eval harness is what revealed this — without it, the obvious call would be "use the best model."
 
-**Engineering note:** one bug caught during sweep implementation — Opus 4.8+ rejects the `temperature` parameter (deprecated). Fixed by adding `_MODELS_WITHOUT_TEMPERATURE` frozenset and `_base_params()` helper that conditionally omits it. This is exactly the kind of silent breaking change a sweep harness catches automatically.
+**Engineering note:** one bug caught during sweep implementation — Opus 4.8+ rejects the `temperature` parameter (deprecated). Fixed by detecting the rejection at runtime: `AnthropicClient` tracks a `_supports_temperature` flag (`recommender/llm.py:57`), and `_base_params()` (`:60-64`) omits `temperature` once a call has failed with an API-shape marker matching a temperature-rejection error (`:71-75`) — no hardcoded model denylist to keep in sync. This is exactly the kind of silent breaking change a sweep harness catches automatically.
 
 **Interview line:** "The sweep showed Haiku outperforms Opus on this task — it's both cheaper and better. Bigger models over-specify; they suggest great cocktails that need ingredients you don't own. Without the eval harness I wouldn't have known — the obvious engineering choice is always 'use the best model.'"
 
 ---
 
-## RAG / retrieval (P3 — completed)
+## RAG / retrieval (P3 — completed; eval-only, not shipped)
+
+> **Note:** Production `/recommend` does not use retrieval (`use_retrieval=False`). RAG exists behind the `--rag` eval flag only. The A/B showed it trailing on constraint adherence and name accuracy — so it was deliberately not shipped to production.
 
 **What was built:**
 - `scripts/fetch_cocktaildb.py` — fetched 581 canonical recipes from CocktailDB API into `data/cocktails.json` (expanded from 426 via category filter)
@@ -286,7 +289,9 @@ RAG name accuracy recovered from 55% → 73% with the reframing. No-RAG improved
 
 ## Judge calibration results (P2)
 
-Human labels (16 suggestions) vs LLM judge, keyed on `suggestion_hash` (SHA256[:8] of sorted ingredient names+sources — stable across renames, invalidates on recipe change):
+Human labels (16 suggestions) vs LLM judge, keyed on `suggestion_hash` (SHA256[:8] of sorted ingredient names+sources — stable across renames, invalidates on recipe change).
+
+**Judge is now model-pinned to `claude-haiku-4-5-20251001`** (previously used the candidate model, introducing self-preference bias). Re-calibration confirmed identical agreement — the prior run was already haiku, so pinning didn't move the numbers; it just makes them stable across future sweeps.
 
 | Dimension | Agreement |
 |---|---|

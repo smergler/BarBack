@@ -19,6 +19,7 @@ from evals.fixtures import SCENARIOS
 from evals.grounding import score
 from evals.judge import judge_suggestion, summarize
 import evals.makeable as makeable_mod
+from evals.run_evals import JUDGE_MODEL
 from recommender.llm import AnthropicClient
 from recommender.recommender import recommend
 
@@ -75,7 +76,7 @@ def run_model(model_id: str, run_judge: bool) -> dict:
             mk_now += mk.makeable_now_count
 
         if run_judge:
-            judge_llm = AnthropicClient(model=model_id)
+            judge_llm = AnthropicClient(model=JUDGE_MODEL)
             for s in rec.suggestions:
                 verdict = judge_suggestion(s, sc.request, judge_llm)
                 all_verdicts.append(verdict)
@@ -132,7 +133,8 @@ def main() -> None:
         raise SystemExit("ANTHROPIC_API_KEY not set.")
 
     models = [_resolve_model(m) for m in args.models]
-    print(f"Sweeping {len(models)} model(s) across {len(SCENARIOS)} scenarios...\n")
+    print(f"Sweeping {len(models)} model(s) across {len(SCENARIOS)} scenarios...")
+    print(f"Judge model pinned: {JUDGE_MODEL}\n")
 
     results = []
     for mid in models:

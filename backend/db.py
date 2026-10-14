@@ -4,7 +4,7 @@ Every public method carries the user's JWT so Postgres RLS fires.
 Do NOT use the service key for user-scoped reads/writes (see ADR-001).
 
 Usage:
-    db = DB(user_jwt=user_id_from_auth_dep)  # user_jwt is the raw Bearer token
+    db = DB(user_jwt=raw_bearer_token)  # user_jwt is the raw Bearer token, NOT the user_id/sub
     bottles = db.list_bottles()
 """
 
@@ -64,6 +64,11 @@ class DB:
     # ------------------------------------------------------------------
     # Companions
     # ------------------------------------------------------------------
+
+    def list_companion_ids(self) -> set[str]:
+        """Return the set of companion IDs owned by the current user. RLS scopes to caller."""
+        rows = self._sb.table("companions").select("id").execute().data
+        return {r["id"] for r in rows}
 
     def list_companions(self, limit: int = 20, offset: int = 0) -> list[dict]:
         return (

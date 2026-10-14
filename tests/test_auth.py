@@ -11,6 +11,8 @@ from fastapi.security import HTTPAuthorizationCredentials
 
 TEST_SECRET = "test-jwt-secret-32-chars-minimum!!"
 TEST_USER_ID = "00000000-0000-0000-0000-000000000001"
+TEST_PROJECT_URL = "https://test-project.supabase.co"
+TEST_ISSUER = f"{TEST_PROJECT_URL}/auth/v1"
 
 
 def _make_token(
@@ -19,11 +21,13 @@ def _make_token(
     audience: str = "authenticated",
     role: str = "authenticated",
     exp_offset: int = 3600,
+    issuer: str = TEST_ISSUER,
 ) -> str:
     payload = {
         "sub": user_id,
         "aud": audience,
         "role": role,
+        "iss": issuer,
         "iat": int(time.time()),
         "exp": int(time.time()) + exp_offset,
     }
@@ -32,6 +36,7 @@ def _make_token(
 
 def _call(token: str, monkeypatch) -> str:
     monkeypatch.setenv("SUPABASE_JWT_TOKEN", TEST_SECRET)
+    monkeypatch.setenv("SUPABASE_PROJECT_URL", TEST_PROJECT_URL)
     from backend.auth import get_current_user
 
     creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
@@ -87,10 +92,32 @@ def test_missing_env_var_raises_503(monkeypatch):
 
 def test_missing_sub_raises_401(monkeypatch):
     monkeypatch.setenv("SUPABASE_JWT_TOKEN", TEST_SECRET)
-    payload = {"aud": "authenticated", "iat": int(time.time()), "exp": int(time.time()) + 3600}
+    monkeypatch.setenv("SUPABASE_PROJECT_URL", TEST_PROJECT_URL)
+    payload = {
+        "aud": "authenticated", "iss": TEST_ISSUER,
+        "iat": int(time.time()), "exp": int(time.time()) + 3600,
+    }
     token = jwt.encode(payload, TEST_SECRET, algorithm="HS256")
     from backend.auth import get_current_user
     creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
     with pytest.raises(HTTPException) as exc:
         get_current_user(creds)
     assert exc.value.status_code == 401
+
+
+def test_wrong_issuer_raises_401(monkeypatch):
+    token = _make_token(issuer="https://not-the-real-project.supabase.co/auth/v1")
+    with pytest.raises(HTTPException) as exc:
+        _call(token, monkeypatch)
+    assert exc.value.status_code == 401
+
+
+def test_missing_project_url_raises_503_for_hs256(monkeypatch):
+    monkeypatch.setenv("SUPABASE_JWT_TOKEN", TEST_SECRET)
+    monkeypatch.delenv("SUPABASE_PROJECT_URL", raising=False)
+    token = _make_token()
+    from backend.auth import get_current_user
+    creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
+    with pytest.raises(HTTPException) as exc:
+        get_current_user(creds)
+    assert exc.value.status_code == 503

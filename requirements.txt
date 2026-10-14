@@ -1,10 +1,10 @@
 pydantic>=2.0
-anthropic>=0.40
+anthropic>=0.111.0,<0.112
 python-dotenv>=1.0
-fastapi>=0.115
-uvicorn[standard]>=0.30
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.30,<1.0
 slowapi>=0.1
-supabase>=2.0
-PyJWT>=2.8
+supabase>=2.0,<3.0
+PyJWT>=2.8,<3.0
 numpy==2.5.0
 sentence-transformers==5.6.0

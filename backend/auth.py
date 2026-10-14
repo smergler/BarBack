@@ -3,6 +3,8 @@
 New Supabase projects (publishable-key format) sign with RS256; tokens are
 verified against the project's JWKS endpoint (one cached network fetch).
 Legacy projects and test-issued tokens use HS256 with SUPABASE_JWT_TOKEN.
+(Note: SUPABASE_JWT_TOKEN holds the JWT signing *secret*, not a token — the name
+is a misnomer. Rename to SUPABASE_JWT_SECRET when the Railway env var can be updated.)
 
 Algorithm routing is based on the token's own `alg` header — each path uses
 a fixed, independent key so there is no algorithm-confusion risk.
@@ -66,19 +68,29 @@ def get_current_user(
                 signing_key.key,
                 algorithms=list(_ASYMMETRIC),
                 audience="authenticated",
+                issuer=f"{url.rstrip('/')}/auth/v1",
+                options={"require": ["exp", "iat", "sub"]},
             )
         elif alg == "HS256":
-            secret = os.environ.get("SUPABASE_JWT_TOKEN")
+            secret = os.environ.get("SUPABASE_JWT_TOKEN")  # JWT signing secret (misnomer; see module docstring)
             if not secret:
                 raise HTTPException(
                     status_code=503,
                     detail="Auth not configured (SUPABASE_JWT_TOKEN missing)",
+                )
+            url = os.environ.get("SUPABASE_PROJECT_URL")
+            if not url:
+                raise HTTPException(
+                    status_code=503,
+                    detail="Auth not configured (SUPABASE_PROJECT_URL missing)",
                 )
             payload = jwt.decode(
                 token,
                 secret,
                 algorithms=["HS256"],
                 audience="authenticated",
+                issuer=f"{url.rstrip('/')}/auth/v1",
+                options={"require": ["exp", "iat", "sub"]},
             )
         else:
             raise HTTPException(status_code=401, detail=f"Unsupported token algorithm: {alg!r}")

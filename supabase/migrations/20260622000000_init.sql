@@ -146,6 +146,7 @@ CREATE POLICY "own session_drinks" ON session_drinks
 -- (the calling endpoint validates companion ownership first).
 -- ============================================================
 
+-- Superseded by 20260703000000_rpc_ownership_guard.sql; do not re-add the guard here.
 CREATE OR REPLACE FUNCTION upsert_companion_like(
   p_companion_id uuid,
   p_value        text
