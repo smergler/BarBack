@@ -1,14 +1,14 @@
 # PLAN_HARDEN — Fix what PLAN_PROTECT's own verification missed
 
 **Why this plan exists:** a security-auditor and a code-quality-sweeper sub-agent independently
-reviewed the 15 unpushed commits closing out `PLAN_PROTECT.md`. Both landed on the same finding
+reviewed the 15 unpushed commits closing out `plans/protect/PLAN.md`. Both landed on the same finding
 from different angles: the instruments used to verify the work (`test_rls_isolation.py`'s RPC
 test, and the eval matcher whose score is the headline metric) pass regardless of whether the
 thing they're checking is actually true. This plan fixes the underlying defects AND the broken
 verification, in that order, so the fix is provable rather than asserted.
 
-**BLOCKED ON:** nothing — this plan supersedes `PLAN_PROTECT.md`'s claimed-done state. Do not
-start `PLAN_EXTEND.md` Task 1 (which builds `coverage_search` directly on `inventory_match.match_bottle`)
+**BLOCKED ON:** nothing — this plan supersedes `plans/protect/PLAN.md`'s claimed-done state. Do not
+start `plans/extend/PLAN.md` Task 1 (which builds `coverage_search` directly on `inventory_match.match_bottle`)
 until Task 1 here is `[x]` — its outputs would inherit the matcher bug.
 
 **Environment:**
@@ -46,7 +46,7 @@ until Task 1 here is `[x]` — its outputs would inherit the matcher bug.
 
 **Produces:** a corrected `inventory_match.match_bottle` with no cross-identity false positives
 and no dead category-fallback branches, plus regression tests that fail if either regresses. This
-is the metric `PLAN_EXTEND.md`'s coverage retrieval will be built on top of, and the headline
+is the metric `plans/extend/PLAN.md`'s coverage retrieval will be built on top of, and the headline
 "100% makeable" number in `README.md`/`RESUME_STORY.md` currently depends on the bug.
 
 - [x] **1.1 Remove the `campari` → `amaro` substitution** in
@@ -150,24 +150,27 @@ skipped. This is the sole automated evidence for the milestone's central securit
       quiet skip.
       depends on: 2.2
 
-- [ ] **2.4 Confirm test Supabase accounts exist.**
+- [>] **2.4 Confirm test Supabase accounts exist.**
       Requires human: only the user has Supabase dashboard access. Create `TEST_USER_A` and
       `TEST_USER_B` accounts if they don't already exist, and add their credentials to local
       `.env`.
       depends on: 2.1
+      _Transferred 2026-10-14 to plans/supabase-keys/PLAN.md 6.3: same work, new variable names. Done once on the old names that day (CI "Live RLS isolation" green); it repeats there._
 
-- [ ] **2.5 Add the CI secrets.**
+- [>] **2.5 Add the CI secrets.**
       Requires human: GitHub repo settings are an external service only the user can configure.
       Add `TEST_USER_A_EMAIL`, `TEST_USER_A_PASSWORD`, `TEST_USER_B_EMAIL`,
       `TEST_USER_B_PASSWORD` as repository secrets (alongside the existing `SUPABASE_*` secrets
       if not already present).
       depends on: 2.3
+      _Transferred 2026-10-14 to plans/supabase-keys/PLAN.md 6.5: same work, new variable names. Done once on the old names that day (CI "Live RLS isolation" green); it repeats there._
 
-- [ ] **2.6 Run the corrected test locally and confirm it passes.**
+- [>] **2.6 Run the corrected test locally and confirm it passes.**
       Requires human: needs live Supabase credentials and network access; the actual pass/fail
       result should be read by a human once before the new CI gate is trusted. Run
       `.venv/bin/python -m pytest tests/test_rls_isolation.py -v` with `.env` populated.
       depends on: 2.4
+      _Transferred 2026-10-14 to plans/supabase-keys/PLAN.md 6.4: same work, new variable names. Done once on the old names that day (CI "Live RLS isolation" green); it repeats there._
 
 ---
 
