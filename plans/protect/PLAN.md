@@ -1,8 +1,8 @@
 # PLAN_PROTECT — Fix what undermines the project's existing claims
 
-**Goal:** Close the findings from `CodeReview.md` that make the resume story *untrue* or make its headline metrics *wrong*. This plan must be fully complete before `PLAN_EXTEND.md` begins — the extend work produces new metric tables, and every number it generates is unreliable until the matcher bugs, the mislabeled mock, and the self-judging bias here are fixed.
+**Goal:** Close the findings from `CodeReview.md` that make the resume story *untrue* or make its headline metrics *wrong*. This plan must be fully complete before `plans/extend/PLAN.md` begins — the extend work produces new metric tables, and every number it generates is unreliable until the matcher bugs, the mislabeled mock, and the self-judging bias here are fixed.
 
-**Kill switch / ordering rule:** If any subtask in this plan is unfinished, do not start `PLAN_EXTEND.md`. Extend is blocked on `PLAN_PROTECT` 100% complete.
+**Kill switch / ordering rule:** If any subtask in this plan is unfinished, do not start `plans/extend/PLAN.md`. Extend is blocked on `PLAN_PROTECT` 100% complete.
 
 **Environment:**
 - Python 3.14, venv at `.venv`.
@@ -173,7 +173,7 @@
       It holds real secrets on disk (untracked). Remove it; if a template is wanted, `env.template` already exists with placeholders. Confirm `git ls-files` shows it was never tracked before deleting.
 
 - [x] **7.7 Standardize on one Railway URL.**
-      PLAN.md history shows `drinksuggesterproject-production...`; README/RESUME_STORY show `barback-production...`. Replace stale occurrences with the single canonical live URL across `README.md` and `RESUME_STORY.md`.
+      plans/drink-suggester/PLAN.md history shows `drinksuggesterproject-production...`; README/RESUME_STORY show `barback-production...`. Replace stale occurrences with the single canonical live URL across `README.md` and `RESUME_STORY.md`.
       Requires human: only the user knows which Railway deployment is the current/canonical one — confirm the URL before mass-replacing.
 
 - [x] **7.8 (Optional, low-risk) Rename `SUPABASE_JWT_TOKEN` → `SUPABASE_JWT_SECRET`.**
@@ -192,4 +192,4 @@
   3. Spawn a sub-agent to review: verify task complete, all subtasks done, no regressions
   4. If tests fail or coverage < 80%: fix, re-run, commit fixes — loop until passing
 - Mark done in this file: `- [ ]` → `- [x]` after each subtask and task.
-- **Do not begin `PLAN_EXTEND.md` until every box in this file is `[x]`.**
+- **Do not begin `plans/extend/PLAN.md` until every box in this file is `[x]`.**

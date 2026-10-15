@@ -1,4 +1,4 @@
-# BUILD_LOG — PLAN_PROTECT.md attempt journal
+# BUILD_LOG — plans/protect/PLAN.md attempt journal
 
 Append-only. Newest at the bottom.
 Format: attempted → failed → suspected cause → now doing.
