@@ -1,19 +1,13 @@
-# BarBack — Resume / Interview Story
+# BarBack — Results and Engineering Decisions
 
-Living notes capturing the narrative, decisions, and metrics for this project.
-Purpose: a portfolio piece aimed at **AI/ML-leaning roles** (senior generalist SWE
-as fallback). Built AI-deep, eval-first — *not* full-stack breadth — because 17
-years of SWE already proves I can build CRUD; what this demonstrates is the
-engineering discipline *around* an LLM.
+Measured results, design decisions, and their rationale for BarBack: an LLM cocktail
+recommender grounded in the user's actual bottle inventory, with a deterministic eval
+harness that measures and protects recommendation quality. Metric definitions live in
+[`eval-spec.md`](eval-spec.md).
 
 ---
 
-## One-liner
-
-An LLM cocktail recommender grounded in the user's actual bottle inventory, with a
-deterministic **eval harness** that measures and protects recommendation quality.
-
-## The metrics timeline (the spine of the story)
+## Metrics timeline
 
 _All "mock" numbers are from offline runs with seeded-violation stubs — no tokens spent.
 "Current" refers to the 14-scenario set including 4 adversarial named-classic scenarios and 2 companion-targeting scenarios._
@@ -28,7 +22,7 @@ _All "mock" numbers are from offline runs with seeded-violation stubs — no tok
 | **Live run** (claude-haiku-4-5, historical 12-scenario set, + judge) | **100%** | **94%** | **75%** | JUDGE: constraints respected 74%, occasion fit 4.6/5, recipe plausibility 4.4/5, **name accuracy 58%** — model grounds correctly but misnames ~42% of drinks (e.g. calls a Boulevardier a "Negroni"). Next lever: name-accuracy prompt work or structured output with canonical name validation. |
 | **Live run — after HARDEN matcher fixes** (haiku, all 14 scenarios, pinned judge, 2 runs 2026-10-13, range shown) | **100%** | **100%** | **74–79%** | JUDGE: constraints 82–86%, occasion fit 4.4–4.5/5, plausibility 4.7–4.9/5, name accuracy 64–68%, companion targeting 3.2/5 (n=4 per run). Makeable stayed 100% in both runs after removing the campari→amaro substitution and restoring gin/rum/vodka/tequila category fallback, so the earlier figure was not inflated by those bugs. Every makeable-now miss was a genuinely unowned item (bitters, ginger beer, Campari, vermouth, absinthe, Peychaud's). Two single runs differ by up to 5pp, so treat these as ranges; "makeable" only requires one owned bottle, "makeable-now" requires no missing ingredients. |
 
-## Engineering decisions worth talking about (the "why" matters more than the "what")
+## Engineering decisions
 
 1. **Eval split: deterministic checks + LLM-as-judge.**
    - *Grounding rate* (primary metric) is pure set math — every ingredient must be
@@ -44,8 +38,8 @@ _All "mock" numbers are from offline runs with seeded-violation stubs — no tok
 3. **Free-form-first, on purpose.** The model names bottles freely and a matching
    layer checks ownership — which produces a *real baseline to improve from*.
    ID-constraining the inventory is a known lever held in reserve, not used up front
-   (constraining away the failures would make the metric trivially 100% and delete
-   the story).
+   (constraining away the failures would make the metric trivially 100% and remove
+   the signal the eval exists to measure).
 4. **Mock-then-live development.** Built the entire pipeline + eval against canned
    responses (zero tokens), with deliberately-seeded violations so the scorer was
    provably working before any API spend. Live run cost pennies.
@@ -54,17 +48,16 @@ _All "mock" numbers are from offline runs with seeded-violation stubs — no tok
    breach; chose Supabase client + user JWT so row-level security actually fires.
    (Caught that raw asyncpg would silently bypass RLS, making the policies dead code.)
 
-## "I measured, found, fixed" — the eval doing its job
+## Measure, find, fix — the eval catching a real failure
 
 The live baseline flagged one failure: given only bourbon, the model built a Hot
 Toddy and labeled **honey, hot water, and cinnamon stick** as `pantry`.
 - "Hot water" → a scorer normalization bug (water is water). Fixed.
 - Honey / cinnamon → a *legitimate catch*: the model over-assumed specialty items
-  the user may not have. Surfaced that my **pantry boundary was under-specified**.
+  the user may not have. Surfaced that the **pantry boundary was under-specified**.
 
-This is the cleanest interview anecdote: the eval caught a real over-assumption, I
-tightened the definition, and the metric moved — concrete evidence I treat LLM
-output as something to be measured and engineered, not trusted.
+The pantry definition was tightened in the system prompt and the grounding rate moved
+from 91% to 100%.
 
 ## What inspecting the outputs revealed (grounding ≠ makeable)
 
@@ -85,8 +78,8 @@ treating generic category nouns as non-matching tokens.)
 Strong signal alongside these: asked for 5 drinks from a 3-bottle bar, it returned five
 distinct drinks each anchored on an owned spirit, no invented bottles.
 
-**The takeaway line:** "grounding measures honesty about ownership, not usefulness — so
-I added a makeable-rate metric and an LLM judge to cover the axes grounding can't."
+Grounding measures honesty about ownership, not usefulness — so a makeable-rate metric
+and an LLM judge were added to cover the axes grounding can't.
 
 ## Prompt injection defense
 
@@ -107,31 +100,12 @@ The grounding scorer and LLM judge are a fourth layer: if injection caused the m
 to recommend hallucinated bottles, grounding catches it; if it produced implausible
 output, the judge catches it.
 
-**Interview one-liner:** "The primary defense is structured output — injected content
-can only produce valid `Recommendation` JSON, so the blast radius is limited to weird
-drink descriptions, which the grounding scorer and LLM judge both catch."
-
-## Interview-ready sentences
-
-- "I tracked *grounding rate* as my primary metric — the percent of recommendations
-  where every ingredient is something the user actually owns or is explicitly told
-  to buy. It's deterministic, so it's defensible."
-- "I split evaluation into deterministic checks for what I could verify mechanically
-  and an LLM judge for the subjective parts."
-- "I built and measured against mocks first, with seeded failures, so I knew the
-  harness worked before spending a token."
-- "The eval caught the model over-assuming pantry items; I tightened the grounding
-  definition and the rate moved from 91% to 100%."
-- "The primary defense against prompt injection is structured output — injected content
-  can only produce valid `Recommendation` JSON, so the blast radius is limited to weird
-  drink descriptions, which the grounding scorer and LLM judge both catch."
-
-## Product framing — why a portfolio piece, not a business (yet)
+## Product scope
 
 The original idea was a consumer product: "Untappd / Vivino for cocktails" — log the
 drinks you've tried and liked, get recommendations; the bartender's "I just know what
 you'll want" trick as an app. It was stress-tested and **deliberately shelved as a
-business** for now, for reasons worth being able to articulate:
+business** for now:
 
 - **Proven model, but the value isn't the recommender.** Untappd (beer) and Vivino
   (wine) prove the log→recommend model works — but they won on *frictionless logging +
@@ -146,16 +120,16 @@ business** for now, for reasons worth being able to articulate:
   their 5 favorite drinks, you reply with a recommendation, and you measure *unprompted
   second requests* — not building the app.
 
-**Decision:** shelve the business question and build this as an **AI/ML portfolio piece**,
-which is why it's scoped AI-deep (eval-first) rather than full-stack breadth. If the
-business is ever revisited, the Wizard-of-Oz test above is the starting point — not more code.
+**Decision:** the business question is shelved and the project is scoped AI-deep
+(eval-first) rather than full-stack breadth. If the business is ever revisited, the
+Wizard-of-Oz test above is the starting point — not more code.
 
 ## Persistence layer engineering (Phase 6 — added after the eval foundation)
 
 **What was built:** Full multi-user backend — Supabase Auth + Postgres + FastAPI, a multi-tab
 SPA frontend, and a complete test suite covering every endpoint.
 
-**Key decisions and war stories:**
+**Key decisions:**
 
 1. **`supabase-py` over `asyncpg` — a real footgun caught.** The original spec combined
    Supabase Auth (JWT + RLS) with raw `asyncpg`. Those two are silently incompatible:
@@ -204,7 +178,7 @@ auth-required test, happy path, and relevant error paths (404, 409, 422).
 - **Model parameterization** — `AnthropicClient(model=...)` accepts any model ID; default stays `claude-haiku-4-5-20251001`. Enables P1 sweep.
 - **Parse-failure rate:** before = theoretically non-zero (real retry happened once in testing). After = 0 — schema contract enforced at the API level.
 
-**Interview line:** "I moved from 'ask for JSON and hope' to `output_config.format` — the API won't return a response that violates the schema. The retry loop still exists for mock/legacy clients, but the live path eliminated an entire failure mode."
+The retry loop still exists for mock/legacy clients; the live path no longer has a parse-failure mode.
 
 ## Multi-model sweep (P1 — completed)
 
@@ -224,11 +198,9 @@ auth-required test, happy path, and relevant error paths (404, 409, 422).
 - Cost: Haiku is 3.4× cheaper than Sonnet, 7.1× cheaper than Opus. No quality trade-off to compensate.
 - Output tokens: Opus used 9,497 vs 6,388 for Haiku — 49% more tokens for worse make-now scores. Verbose ≠ accurate on this task.
 
-**The insight worth articulating:** bigger models aren't always better — task shape matters. This is a constraint-satisfaction problem (use what's in inventory), not a creative writing or reasoning problem. Haiku, being more "literal," respects the constraints better; Sonnet and Opus pattern-match to "good cocktail recipes" and overreach. The eval harness is what revealed this — without it, the obvious call would be "use the best model."
+**Finding:** bigger models aren't always better — task shape matters. This is a constraint-satisfaction problem (use what's in inventory), not a creative writing or reasoning problem. Haiku, being more "literal," respects the constraints better; Sonnet and Opus pattern-match to "good cocktail recipes" and overreach. The eval harness is what revealed this — without it, the obvious call would be "use the best model."
 
 **Engineering note:** one bug caught during sweep implementation — Opus 4.8+ rejects the `temperature` parameter (deprecated). Fixed by detecting the rejection at runtime: `AnthropicClient` tracks a `_supports_temperature` flag (`recommender/llm.py:57`), and `_base_params()` (`:60-64`) omits `temperature` once a call has failed with an API-shape marker matching a temperature-rejection error (`:71-75`) — no hardcoded model denylist to keep in sync. This is exactly the kind of silent breaking change a sweep harness catches automatically.
-
-**Interview line:** "The sweep showed Haiku outperforms Opus on this task — it's both cheaper and better. Bigger models over-specify; they suggest great cocktails that need ingredients you don't own. Without the eval harness I wouldn't have known — the obvious engineering choice is always 'use the best model.'"
 
 ---
 
@@ -260,11 +232,9 @@ auth-required test, happy path, and relevant error paths (404, 409, 422).
 
 **The unexpected finding:** RAG improved grounding and makeable-now but *hurt* name accuracy and constraint adherence. Diagnosed as over-anchoring — the model sees a canonical Negroni recipe with gin and either tries to use gin (violating constraints) or follows the canonical recipe too closely rather than adapting to the user's actual bar. Injecting recipes as inspiration works against a system designed for substitution.
 
-**The honest conclusion:** RAG helps the "can I make this?" dimension (more owned bottles anchor the suggestions) but hurts the "does this respect my constraints?" dimension. For this use case, ingredient-coverage retrieval (set math) might be more appropriate than semantic retrieval — find recipes the user *can* make rather than recipes that are *similar* to what they asked for.
+**Conclusion:** RAG helps the "can I make this?" dimension (more owned bottles anchor the suggestions) but hurts the "does this respect my constraints?" dimension. For this use case, ingredient-coverage retrieval (set math) might be more appropriate than semantic retrieval — find recipes the user *can* make rather than recipes that are *similar* to what they asked for.
 
 **Also notable:** name accuracy varied 55%–82% across runs in the same session with temperature=0.3. A single-run number isn't reliable for this dimension; need multiple runs and averaging, or structured outputs that constrain naming.
-
-**Interview line:** "RAG improved grounding 5pp and makeable-now 11pp, but name accuracy dropped 27pp — the eval caught it immediately. The model over-anchored on canonical recipes: seeing a Negroni recipe made it more likely to call things Negronis, not less. That's the kind of non-obvious failure you only find if you measure."
 
 **Fix — prompt engineering + reframed RAG:**
 Two changes made together:
@@ -283,7 +253,7 @@ Results after both fixes:
 
 RAG name accuracy recovered from 55% → 73% with the reframing. No-RAG improved on all dimensions except name accuracy (82% → 64%), likely due to run-to-run variance — these metrics have ±15pp noise at single-run level. RAG still trails no-RAG on constraints (73% vs 86%), suggesting canonical recipes occasionally pull the model off constrained scenarios.
 
-**The full story arc:** identified the RAG regression with the eval → diagnosed over-anchoring → fixed the framing → measured improvement. Three iterations, each time the harness told us what changed.
+**Sequence:** identified the RAG regression with the eval → diagnosed over-anchoring → fixed the framing → measured improvement. Three iterations, each time the harness showed what changed.
 
 ---
 
@@ -297,13 +267,11 @@ Human labels (16 suggestions) vs LLM judge, keyed on `suggestion_hash` (SHA256[:
 |---|---|
 | `constraints_respected` | 80% (4/5 pairs) |
 | `name_accurate` | **56%** (9/16) — judge too lenient |
-| `occasion_fit` | MAE=0.62, exact 50% — you gave all 5s, judge more conservative |
+| `occasion_fit` | MAE=0.62, exact 50% — human labels were all 5s, judge more conservative |
 | `recipe_plausibility` | MAE=0.50, exact 69% — judge missed missing bitters/absinthe |
 | `companion_targeting` | 100% (1/1) |
 
 Key finding: `name_accurate` 56% agreement — the judge passed "Mezcal Negroni", "Bourbon Neat on the rocks", "Old Fashioned without bitters" as correct. Judge prompt was tightened post-calibration with explicit rules: substituting base spirit = false, missing canonical ingredients = false, rubric added to `recipe_plausibility`.
-
-**Interview line:** "I didn't trust the judge until I validated it. Calibration caught that it was 56% agreement on name accuracy — systematically too lenient on creative names borrowing classic labels. I tightened the prompt and re-ran."
 
 ## Observability / tracing (P5)
 
@@ -319,9 +287,9 @@ By call type:
   judge       22 calls   14,768 in   2,062 out   1,435ms avg
 ```
 
-Recommend calls are 3× slower and use 4× more output tokens than judge calls — useful for cost modeling if you ever scale to many users.
+Recommend calls are 3× slower and use 4× more output tokens than judge calls — useful for cost modeling at higher user counts.
 
-## Open decisions / next steps
+## Decision log
 
 - [x] **Pantry boundary:** decided — honey/cinnamon stay as legitimate "grab these"
   flags (kept the metric honest). Fixed via system-prompt tightening, not by widening
