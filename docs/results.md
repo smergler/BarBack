@@ -22,6 +22,8 @@ _All "mock" numbers are from offline runs with seeded-violation stubs — no tok
 | **Live run** (claude-haiku-4-5, historical 12-scenario set, + judge) | **100%** | **94%** | **75%** | JUDGE: constraints respected 74%, occasion fit 4.6/5, recipe plausibility 4.4/5, **name accuracy 58%** — model grounds correctly but misnames ~42% of drinks (e.g. calls a Boulevardier a "Negroni"). Next lever: name-accuracy prompt work or structured output with canonical name validation. |
 | **Live run — after HARDEN matcher fixes** (haiku, all 14 scenarios, pinned judge, 2 runs 2026-10-13, range shown) | **100%** | **100%** | **74–79%** | JUDGE: constraints 82–86%, occasion fit 4.4–4.5/5, plausibility 4.7–4.9/5, name accuracy 64–68%, companion targeting 3.2/5 (n=4 per run). Makeable stayed 100% in both runs after removing the campari→amaro substitution and restoring gin/rum/vodka/tequila category fallback, so the earlier figure was not inflated by those bugs. Every makeable-now miss was a genuinely unowned item (bitters, ginger beer, Campari, vermouth, absinthe, Peychaud's). Two single runs differ by up to 5pp, so treat these as ranges; "makeable" only requires one owned bottle, "makeable-now" requires no missing ingredients. |
 
+> **Caveat on all JUDGE figures above:** they are the LLM judge's scores. The 58% row used the pre-tightening judge, which matched human name labels only 56% of the time and erred lenient, so it likely *overstates*. The 64–68% rows used the tightened judge, which re-calibration (2026-10-15) found agrees 76% (22/29) but now errs *strict* (5 of 7 disagreements: judge said wrong, human said right), so those may *understate*. See [Judge calibration results](#judge-calibration-results-p2).
+
 ## Engineering decisions
 
 1. **Eval split: deterministic checks + LLM-as-judge.**
@@ -161,7 +163,7 @@ SPA frontend, and a complete test suite covering every endpoint.
    explicitly checks session ownership before calling `list_session_drinks`. Two independent
    layers must fail before a cross-user read succeeds.
 
-**Test count:** 105 passing unit tests (no live Supabase needed), 3 live RLS isolation
+**Test count:** 147 passing unit tests (no live Supabase needed), 3 live RLS isolation
 tests (require test credentials; run live and passing — see P6.11). Every endpoint has:
 auth-required test, happy path, and relevant error paths (404, 409, 422).
 
@@ -261,7 +263,7 @@ RAG name accuracy recovered from 55% → 73% with the reframing. No-RAG improved
 
 Human labels (16 suggestions) vs LLM judge, keyed on `suggestion_hash` (SHA256[:8] of sorted ingredient names+sources — stable across renames, invalidates on recipe change).
 
-**Judge is now model-pinned to `claude-haiku-4-5-20251001`** (previously used the candidate model, introducing self-preference bias). Re-calibration confirmed identical agreement — the prior run was already haiku, so pinning didn't move the numbers; it just makes them stable across future sweeps.
+**Judge is now model-pinned to `claude-haiku-4-5-20251001`** (previously used the candidate model, introducing self-preference bias). The prior run was already haiku, so pinning changes nothing about these numbers; it keeps future sweeps stable.
 
 | Dimension | Agreement |
 |---|---|
@@ -272,6 +274,34 @@ Human labels (16 suggestions) vs LLM judge, keyed on `suggestion_hash` (SHA256[:
 | `companion_targeting` | 100% (1/1) |
 
 Key finding: `name_accurate` 56% agreement — the judge passed "Mezcal Negroni", "Bourbon Neat on the rocks", "Old Fashioned without bitters" as correct. Judge prompt was tightened post-calibration with explicit rules: substituting base spirit = false, missing canonical ingredients = false, rubric added to `recipe_plausibility`.
+
+**Why the first re-calibration didn't count:** the PLAN_PROTECT 5.3 "re-calibration" re-scored the stale pre-tightening verdicts: `calibrate_judge.py` read `judge_verdicts_calibration.json` while `full_eval.sh` wrote `judge_verdicts.json`, so "identical 56%" was not a new measurement. The original 16 labeled suggestion bodies weren't saved, so they couldn't be re-judged.
+
+### Re-calibration v2 (2026-10-15): tightened judge vs. fresh blind labels
+
+Two live runs with the tightened judge (`evals/calibration_v2/`), deduped by hash → 29 suggestions. Labeled blind with `python -m evals.label` (shows exactly what the judge sees, never its verdict). `calibrate_judge` now takes `--labels`/`--verdicts`. Reproduce: `python -m evals.calibrate_judge --labels evals/calibration_v2/labels.json --verdicts evals/calibration_v2/verdicts.json`.
+
+| Dimension | v1 (pre-tightening, n=16) | v2 (tightened, n=29) |
+|---|---|---|
+| `name_accurate` | 56% (9/16), 95% CI 33–77% | **76% (22/29), 95% CI 58–88%** |
+| `constraints_respected` | 80% (4/5) | 29% (2/7), not a valid measurement, see below |
+| `occasion_fit` | MAE 0.62, exact 50% | MAE 0.59, exact 48% (no rubric exists for this dimension) |
+| `recipe_plausibility` | MAE 0.50, exact 69% | MAE 0.52, exact 69% |
+| `companion_targeting` | 1/1 exact | MAE 1.67 (n=3, too small to read) |
+
+What the numbers actually say:
+- **Name accuracy went 56% → 76%, but the CIs overlap.** With n=16 and n=29, this is consistent with real improvement, not proof of it.
+- **The judge's bias flipped from lenient to strict.** v1: 6 of 7 disagreements were judge-said-right / human-said-wrong. v2: 5 of 7 are judge-said-wrong / human-said-right. The tightening over-corrected.
+- **Most remaining name disagreements are the labeler departing from the rubric, not the judge.** In 6 of 7 the judge applied the written rule ("Mezcal Negroni" = false; base-spirit swap = false; invented names = true) and the human didn't. The rule "Mezcal Negroni = false" came from the human's own v1 notes; in v2 the human marked 3 of 4 Mezcal Negronis as accurate. One real judge error: it marked "Rittenhouse Sour" false while calling it an invented name, which contradicts its own rubric.
+- **Labeler self-consistency is low.** 5 suggestions recurred from v1. Name labels matched on only 2 of 5 (40%), below the judge's 76% agreement with the human. n=5 is tiny, but the ground truth is the noisiest part of this setup.
+- **`constraints_respected` agreement is contaminated.** 3 of 5 disagreements were human labels docking for ingredients the scenario didn't own (e.g. "no Peychaud's in scenario"). That's a grounding question the judge is never shown, so 29% measures label drift, not judge quality.
+- **`occasion_fit` has no rubric** in `JUDGE_SYSTEM`, only the output format. The steady "human 5 / judge 4" pattern is two different scales, not judge error.
+
+Next: write the name rule down once and re-label against it (or change the rubric to accept recognized variants like "Mezcal Negroni"); fix the invented-name false negative; add an `occasion_fit` rubric; relabel constraints without inventory; get a second labeler.
+
+**Glossary:** *agreement* = % of items where human and judge gave the same yes/no. *MAE* (mean absolute error) = average size of the gap between human and judge 1–5 scores, ignoring direction; 0 is perfect. A low MAE can still hide a consistent bias (e.g. judge always one point below).
+
+**Grounding claim, stated precisely:** every ingredient is either in inventory or explicitly flagged `missing`/`perishable` — not "uses only what's on hand."
 
 ## Observability / tracing (P5)
 
@@ -302,12 +332,13 @@ Recommend calls are 3× slower and use 4× more output tokens than judge calls �
   inventory claims to catch hallucination (model claiming a bottle you don't own still fails).
   Mock baseline: MAKEABLE 88%, MAKEABLE-NOW 50% across open-ended scenarios.
 - [x] **FastAPI + single-page frontend** deployed locally. `POST /recommend`, `GET /inventory`,
-  rate-limited (10/min per IP), input-length capped, XSS-safe frontend. Ready for Railway deploy.
+  rate-limited (10/min per caller, keyed on JWT `sub`, client IP only when unauthenticated), input-length capped, XSS-safe frontend. Ready for Railway deploy.
 - [x] **Live eval run** complete. GROUNDING 100%, MAKEABLE 94%, MAKEABLE-NOW 75%.
   JUDGE: constraints 74%, occasion fit 4.6/5, plausibility 4.4/5, **name accuracy 58%** —
   the model grounds correctly but misnames ~42% of drinks. Confirmed in production: "movie night"
   request returned a Boulevardier (correct) and a "Negroni" made with mezcal + dry vermouth
   (neither gin nor sweet vermouth — not a Negroni by any definition). Grounding: 100%. Name: wrong.
   This is the clearest next improvement target and a live demo of exactly why the judge exists.
+  _Caveat: these JUDGE figures come from the pre-tightening judge (56% human agreement on name accuracy, lenient); true name accuracy is likely lower. See Judge calibration results._
 - [x] **Railway deploy** complete. Live URL: https://barback-production.up.railway.app
   (`railway.toml` start command + ANTHROPIC_API_KEY set in Railway dashboard).
