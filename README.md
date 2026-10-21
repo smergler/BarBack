@@ -168,4 +168,4 @@ would only become a design factor at thousands-of-users scale.
 - 105 passing unit tests (3 live RLS isolation tests require test credentials)
 - CI gate: pytest + offline eval `--strict` on every push; Railway redeploys on push to main via GitHub integration
 
-**Live demo:** https://barback-production.up.railway.app
+**Live demo:** https://barback.up.railway.app
