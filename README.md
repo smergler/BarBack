@@ -99,7 +99,6 @@ app/
   static/          vanilla JS SPA with login, inventory, companions, recommend + verdict tabs
 docs/              eval-spec.md, adr-001-data-isolation.md, backend-spec.md
 supabase/migrations/ schema history (init, grants, defaults, telemetry, suited_for, ownership guard)
-plans/             one folder per build plan (PLAN.md, BUILD_LOG.md, PROGRESS.md); see plans/README.md
 RESUME_STORY.md    narrative, metrics timeline, key decisions
 ```
 

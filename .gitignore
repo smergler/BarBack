@@ -24,6 +24,7 @@
 # production
 /build
 /plans
+/BACKLOG.md
 
 # misc
 .DS_Store
