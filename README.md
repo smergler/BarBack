@@ -101,9 +101,11 @@ supabase/migrations/ schema history (init, grants, defaults, telemetry, suited_f
 
 ## Setup
 
+Requires Python 3.14 (pinned in `.python-version`). Newer versions fail because PyTorch has no wheels for them yet.
+
 ```bash
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+python3.14 -m venv .venv   # not plain python3
+.venv/bin/pip install -r requirements-dev.txt
 ```
 
 For live calls, create `.env` at the project root (see `env.template`):
@@ -118,7 +120,7 @@ SUPABASE_JWT_TOKEN=...    # project JWT secret (Settings → API)
 ## Run
 
 ```bash
-.venv/bin/python -m pytest -q                       # 105 unit tests (3 live RLS tests skipped without credentials)
+.venv/bin/python -m pytest -q                       # 140 unit tests (4 live RLS tests skipped without credentials)
 .venv/bin/python -m evals.run_evals                 # offline eval (mock responses, no tokens)
 .venv/bin/python -m evals.run_evals --live          # eval against the real model
 .venv/bin/python -m evals.run_evals --live --judge  # + LLM judge
@@ -140,7 +142,7 @@ _(Source: trace summary from 14-scenario live eval run; see [`docs/results.md`](
 | Heavy (15/day) | ~450 | ~$1.62 |
 
 A full offline eval run is **free** (mock responses). A full `--live --judge` run is
-~30 calls ≈ **under $0.20**. Swapping to Opus 4.8 ($5/$25 per 1M) is ~5× across the board —
+~36 calls ≈ **under $0.20**. Swapping to Opus 4.8 ($5/$25 per 1M) is ~5× across the board —
 heavy personal use still ~$10/mo.
 
 **Takeaway:** at personal scale the API cost is a rounding error, so the project optimizes
@@ -161,7 +163,7 @@ would only become a design factor at thousands-of-users scale.
 - Full CRUD for all 6 tables via supabase-py carrying the user JWT (RLS fires on every query)
 - Sessions + session_drinks with verdict → companion preference feedback (atomic via Postgres RPC)
 - Multi-tab SPA frontend: login, inventory, companions, recommend + verdict buttons
-- 147 passing unit tests (3 live RLS isolation tests require test credentials)
+- 140 passing unit tests (4 live RLS isolation tests require test credentials)
 - CI gate: pytest + offline eval `--strict` on every push; Railway redeploys on push to main via GitHub integration
 
 **Live demo:** https://barback.up.railway.app
