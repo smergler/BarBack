@@ -102,30 +102,6 @@ The grounding scorer and LLM judge are a fourth layer: if injection caused the m
 to recommend hallucinated bottles, grounding catches it; if it produced implausible
 output, the judge catches it.
 
-## Product scope
-
-The original idea was a consumer product: "Untappd / Vivino for cocktails" — log the
-drinks you've tried and liked, get recommendations; the bartender's "I just know what
-you'll want" trick as an app. It was stress-tested and **deliberately shelved as a
-business** for now:
-
-- **Proven model, but the value isn't the recommender.** Untappd (beer) and Vivino
-  (wine) prove the log→recommend model works — but they won on *frictionless logging +
-  social/gamification*, not on recommendation quality. The recommender (the fun part) is
-  the least important ~20%.
-- **Cold-start / logging-friction trap.** The "I'm indecisive at a bar, surprise me"
-  moment is exactly when the user has logged nothing and won't stop to journal. The value
-  arrives only after work the user won't do.
-- **Two different products.** Bar-goer (social discovery, Untappd-shaped) vs. home
-  mixologist (inventory-based, Mixel-shaped) are different apps; building both finishes neither.
-- **Cheapest test first.** The right validation is a Wizard-of-Oz run — ~10 people text
-  their 5 favorite drinks, you reply with a recommendation, and you measure *unprompted
-  second requests* — not building the app.
-
-**Decision:** the business question is shelved and the project is scoped AI-deep
-(eval-first) rather than full-stack breadth. If the business is ever revisited, the
-Wizard-of-Oz test above is the starting point — not more code.
-
 ## Persistence layer engineering (Phase 6 — added after the eval foundation)
 
 **What was built:** Full multi-user backend — Supabase Auth + Postgres + FastAPI, a multi-tab

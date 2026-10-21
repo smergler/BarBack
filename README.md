@@ -6,8 +6,7 @@ An LLM cocktail recommender **grounded in the user's actual bottle inventory**, 
 eval-first: the centerpiece is a measurement harness that proves the recommendations only
 use ingredients you own (or honestly flags what you'd need to buy), not just a model call.
 
-> Built as an AI/ML portfolio piece. The interesting engineering is the discipline *around*
-> the LLM — grounding metrics, adversarial evals, an LLM-as-judge — not the model call itself.
+> The interesting engineering is the discipline *around* the LLM — grounding metrics, adversarial evals, an LLM-as-judge — not the model call itself.
 
 ## What it does
 
@@ -57,12 +56,11 @@ directly to Postgres as the service role with no JWT, so `auth.uid()` is never s
 
 Decision: **Supabase client (PostgREST) carrying the user's JWT**, so RLS actually fires.
 Defense in depth: both the application *and* the database must fail before data leaks.
-The throughput cost of PostgREST over a direct connection is irrelevant at personal/portfolio scale.
+The throughput cost of PostgREST over a direct connection is irrelevant at personal scale.
 
-> **Interview one-liner:** "I chose DB-enforced row-level security over app-enforced
-> `WHERE user_id` filtering, because in a multi-tenant app a single forgotten filter is
-> a data breach — and I caught that wiring up raw asyncpg would have silently bypassed
-> RLS and made the policies dead code."
+**In short:** DB-enforced row-level security was chosen over app-enforced `WHERE user_id`
+filtering because in a multi-tenant app a single forgotten filter is a data breach. Wiring
+up raw asyncpg would have silently bypassed RLS and made the policies dead code.
 
 ## Architecture
 

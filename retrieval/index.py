@@ -3,7 +3,7 @@
 Stack choice: local sentence-transformers (all-MiniLM-L6-v2) + numpy cosine.
 No extra API key; runs fully offline after first model download (~80MB).
 Voyage AI embeddings would be marginally better quality but add a dependency
-and a key; local is the right call for a portfolio project.
+and a key; local is the right call for a personal-scale project.
 
     python -m retrieval.index            # embed + cache
     python -m retrieval.index --force    # re-embed even if cache exists
