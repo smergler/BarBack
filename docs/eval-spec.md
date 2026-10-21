@@ -94,7 +94,7 @@ scorers; the live model is scored on the same scenarios.
 ## Running it
 
 ```bash
-.venv/bin/python -m pytest -q                      # unit tests (scorers, matcher, parser, judge)
+.venv/bin/python -m pytest -q                      # unit tests (scorers, matcher, parser, judge, API endpoints, RLS)
 .venv/bin/python -m evals.run_evals                # offline, mock responses, zero tokens
 .venv/bin/python -m evals.run_evals --live         # real model (needs ANTHROPIC_API_KEY)
 .venv/bin/python -m evals.run_evals --live --judge # also run the LLM judge
