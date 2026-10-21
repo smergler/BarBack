@@ -3,7 +3,7 @@ can't measure: did the drink respect the user's constraints, fit the occasion,
 and is it a plausible recipe.
 
 Kept separate from grounding on purpose — grounding is mechanical and cheap;
-judging is an LLM call and a soft signal. The interview point is exactly this
+judging is an LLM call and a soft signal. The design point is exactly this
 split: verify what you can in code, judge only what you must.
 
 Like the recommender, the judge is wired for a real client but exercised offline

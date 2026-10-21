@@ -42,10 +42,10 @@ door with the wall knocked out beside it.
 Rationale for this project:
 - **Defense in depth.** Postgres enforces isolation even if app code has a bug; the app
   must *and* the DB must both fail before data leaks.
-- **Performance is irrelevant here.** This is a personal/portfolio-scale app; asyncpg's
+- **Performance is irrelevant here.** This is a personal-scale app; asyncpg's
   throughput edge buys nothing measurable and would cost the only real safety guarantee.
 - **It makes the P6 RLS policies real** instead of decorative — no rewrite of the schema work.
-- **Fewer moving parts** than Option 3, and defensible in an interview in one sentence.
+- **Fewer moving parts** than Option 3, and explainable in one sentence.
 
 ## Consequences / guardrails
 
@@ -58,8 +58,8 @@ Rationale for this project:
 - If throughput ever genuinely matters, revisit **Option 3** (deliberately, with tests
   that prove RLS still fires over the direct connection) — never silently drop to Option 1.
 
-## Interview one-liner
+## Summary
 
-"I chose DB-enforced row-level security over app-enforced `WHERE user_id` filtering,
-because in a multi-tenant app a single forgotten filter is a data breach — and I caught
-that wiring up raw asyncpg would have silently bypassed RLS and made the policies dead code."
+DB-enforced row-level security was chosen over app-enforced `WHERE user_id` filtering,
+because in a multi-tenant app a single forgotten filter is a data breach. Wiring up raw
+asyncpg would have silently bypassed RLS and made the policies dead code.

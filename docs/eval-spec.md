@@ -76,7 +76,7 @@ For the subjective dimensions deterministic checks can't see (`evals/judge.py`,
 - `companion_targeting` (1–5, omitted when no companions present)
 
 `JudgeSummary` aggregates constraint pass-rate and average scores. The judge has been
-**calibrated against human labels** (P2 — 16 suggestions labeled; see `RESUME_STORY.md`).
+**calibrated against human labels** (P2 — 16 suggestions labeled; see [`results.md`](results.md)).
 
 ## Scenarios
 
@@ -101,4 +101,4 @@ scorers; the live model is scored on the same scenarios.
 .venv/bin/python -m evals.inspect <scenario_id>... # print the model's actual suggestions
 ```
 
-Current numbers and their history live in `../RESUME_STORY.md` (metrics timeline).
+Current numbers and their history live in [`results.md`](results.md) (metrics timeline).

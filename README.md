@@ -6,8 +6,7 @@ An LLM cocktail recommender **grounded in the user's actual bottle inventory**, 
 eval-first: the centerpiece is a measurement harness that proves the recommendations only
 use ingredients you own (or honestly flags what you'd need to buy), not just a model call.
 
-> Built as an AI/ML portfolio piece. The interesting engineering is the discipline *around*
-> the LLM — grounding metrics, adversarial evals, an LLM-as-judge — not the model call itself.
+> The interesting engineering is the discipline *around* the LLM — grounding metrics, adversarial evals, an LLM-as-judge — not the model call itself.
 
 ## What it does
 
@@ -38,12 +37,12 @@ The recommender is graded by a measurement harness, not vibes:
 | **Live run** (claude-haiku-4-5, historical 12-scenario set) | **100%** | **94%** | **75%** | JUDGE: constraints 74%, occasion fit 4.6/5, plausibility 4.4/5, name accuracy 58% — model grounds perfectly but misnames ~42% of drinks. |
 | **Live run — after HARDEN matcher fixes** (haiku, all 14 scenarios, pinned judge, 2 runs 2026-10-13, range shown) | **100%** | **100%** | **74–79%** | JUDGE: constraints 82–86%, occasion fit 4.4–4.5/5, plausibility 4.7–4.9/5, name accuracy 64–68%, companion targeting 3.2/5 (n=4 per run). Makeable stayed 100% in both runs after removing the campari→amaro substitution and restoring gin/rum/vodka/tequila category fallback, so the earlier figure was not inflated by those bugs. Every makeable-now miss was a genuinely unowned item (bitters, ginger beer, Campari, vermouth, absinthe, Peychaud's). Two single runs differ by up to 5pp, so treat these as ranges; "makeable" only requires one owned bottle, "makeable-now" requires no missing ingredients. |
 
-_See [`RESUME_STORY.md`](RESUME_STORY.md) for the full story including why 59% grounding mock ≠ regression._
+_See [`docs/results.md`](docs/results.md) for the full metrics timeline, including why 59% grounding mock ≠ regression._
 
-**Note on RAG:** production `/recommend` does not use retrieval (`use_retrieval=False`). RAG was evaluated via an A/B (`--rag` flag) and found to improve grounding slightly but hurt constraint adherence and name accuracy — so it was deliberately not shipped. See RESUME_STORY.md for the full A/B story.
+**Note on RAG:** production `/recommend` does not use retrieval (`use_retrieval=False`). RAG was evaluated via an A/B (`--rag` flag) and found to improve grounding slightly but hurt constraint adherence and name accuracy — so it was deliberately not shipped. See [`docs/results.md`](docs/results.md) for the full A/B results.
 
 See [`docs/eval-spec.md`](docs/eval-spec.md) for exact definitions and
-[`RESUME_STORY.md`](RESUME_STORY.md) for the full narrative and engineering decisions.
+[`docs/results.md`](docs/results.md) for the full results and engineering decisions.
 
 ## Security decision: DB-enforced RLS, not app-enforced `WHERE user_id`
 
@@ -57,12 +56,11 @@ directly to Postgres as the service role with no JWT, so `auth.uid()` is never s
 
 Decision: **Supabase client (PostgREST) carrying the user's JWT**, so RLS actually fires.
 Defense in depth: both the application *and* the database must fail before data leaks.
-The throughput cost of PostgREST over a direct connection is irrelevant at personal/portfolio scale.
+The throughput cost of PostgREST over a direct connection is irrelevant at personal scale.
 
-> **Interview one-liner:** "I chose DB-enforced row-level security over app-enforced
-> `WHERE user_id` filtering, because in a multi-tenant app a single forgotten filter is
-> a data breach — and I caught that wiring up raw asyncpg would have silently bypassed
-> RLS and made the policies dead code."
+**In short:** DB-enforced row-level security was chosen over app-enforced `WHERE user_id`
+filtering because in a multi-tenant app a single forgotten filter is a data breach. Wiring
+up raw asyncpg would have silently bypassed RLS and made the policies dead code.
 
 ## Architecture
 
@@ -97,9 +95,8 @@ backend/
 app/
   main.py          FastAPI app: all routers, /recommend → real inventory + session lifecycle
   static/          vanilla JS SPA with login, inventory, companions, recommend + verdict tabs
-docs/              eval-spec.md, adr-001-data-isolation.md, backend-spec.md
+docs/              results.md, eval-spec.md, adr-001-data-isolation.md, backend-spec.md
 supabase/migrations/ schema history (init, grants, defaults, telemetry, suited_for, ownership guard)
-RESUME_STORY.md    narrative, metrics timeline, key decisions
 ```
 
 ## Setup
@@ -134,7 +131,7 @@ Runs on **Claude Haiku 4.5** ($1.00 / 1M input tokens, $5.00 / 1M output tokens)
 
 Per recommendation request: ~1,320 input tokens (system prompt + inventory + request)
 and ~457 output tokens (3 structured drinks) → **≈ $0.0036**, under half a cent.
-_(Source: trace summary from 14-scenario live eval run; see RESUME_STORY.md.)_
+_(Source: trace summary from 14-scenario live eval run; see [`docs/results.md`](docs/results.md).)_
 
 | Personal usage | Requests/mo | Est. cost/mo |
 |---|---|---|
@@ -164,7 +161,7 @@ would only become a design factor at thousands-of-users scale.
 - Full CRUD for all 6 tables via supabase-py carrying the user JWT (RLS fires on every query)
 - Sessions + session_drinks with verdict → companion preference feedback (atomic via Postgres RPC)
 - Multi-tab SPA frontend: login, inventory, companions, recommend + verdict buttons
-- 105 passing unit tests (3 live RLS isolation tests require test credentials)
+- 147 passing unit tests (3 live RLS isolation tests require test credentials)
 - CI gate: pytest + offline eval `--strict` on every push; Railway redeploys on push to main via GitHub integration
 
 **Live demo:** https://barback.up.railway.app
