@@ -28,6 +28,7 @@ from slowapi.util import get_remote_address
 
 from backend.auth import bearer_scheme, get_current_user
 from backend.db import DB
+from backend.supabase_keys import SupabaseKeyError, project_url, publishable_key
 from backend.routers import companions, inventory, session_drinks, sessions
 from recommender.llm import AnthropicClient
 from recommender.recommender import RecommendationError, recommend
@@ -89,6 +90,11 @@ def get_config() -> dict:
         "supabase_url": os.environ.get("SUPABASE_PROJECT_URL", ""),
         "supabase_anon_key": os.environ.get("SUPABASE_ANON_KEY", ""),
     }
+
+
+@app.exception_handler(SupabaseKeyError)
+async def supabase_key_error_handler(request: Request, exc: SupabaseKeyError) -> JSONResponse:
+    return JSONResponse(status_code=503, content={"detail": f"Supabase not configured: {exc}"})
 
 
 @app.exception_handler(RecommendationError)
