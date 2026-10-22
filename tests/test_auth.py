@@ -55,7 +55,6 @@ class _StubJwks:
 @pytest.fixture(autouse=True)
 def jwks(monkeypatch):
     monkeypatch.setenv("SUPABASE_PROJECT_URL", TEST_PROJECT_URL)
-    monkeypatch.delenv("SUPABASE_JWT_TOKEN", raising=False)
     holder = {"key": EC_KEY.public_key()}
     monkeypatch.setattr(auth_mod, "_get_jwks_client", lambda: _StubJwks(holder["key"]))
     return holder
