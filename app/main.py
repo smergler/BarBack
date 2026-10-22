@@ -85,10 +85,10 @@ def health() -> dict:
 
 @app.get("/config")
 def get_config() -> dict:
-    """Public config for the frontend — safe (anon/public keys only)."""
+    """Public config for the frontend — safe — publishable key only."""
     return {
-        "supabase_url": os.environ.get("SUPABASE_PROJECT_URL", ""),
-        "supabase_anon_key": os.environ.get("SUPABASE_ANON_KEY", ""),
+        "supabase_url": project_url(),
+        "supabase_publishable_key": publishable_key(),
     }
 
 
