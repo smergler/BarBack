@@ -45,3 +45,7 @@ scorer calls it correct either way, so this is invisible in evals but wrong in r
 **Fix:** ID-constraining the model is the right lever (already on PLAN_EXTEND). Until then,
 if multiple bottles match a category fallback, prefer the one with the highest name-token
 overlap with the ingredient string rather than iteration order.
+
+## Resolved: Supabase legacy API keys and HS256 JWT secret (fixed 2026-10-21)
+
+Migrated to Supabase publishable/secret API keys and JWKS-only verification. SUPABASE_JWT_TOKEN misnomer resolved by removal.
