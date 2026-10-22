@@ -31,13 +31,12 @@ jobs:
           TEST_USER_B_EMAIL: ${{ secrets.TEST_USER_B_EMAIL }}
           TEST_USER_B_PASSWORD: ${{ secrets.TEST_USER_B_PASSWORD }}
           SUPABASE_PROJECT_URL: ${{ secrets.SUPABASE_PROJECT_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          SUPABASE_JWT_TOKEN: ${{ secrets.SUPABASE_JWT_TOKEN }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
         run: |
           python -m pytest tests/test_rls_isolation.py -v | tee /tmp/rls_output.txt
           python -m pytest tests/test_rls_isolation.py --collect-only -q | grep -q "4 tests collected"
           if grep -q "skipped" /tmp/rls_output.txt; then
-            echo "Live RLS isolation tests were skipped — TEST_USER_*/SUPABASE_* secrets are missing." >&2
+            echo "Live RLS isolation tests were skipped — TEST_USER_* / SUPABASE_PROJECT_URL / SUPABASE_PUBLISHABLE_KEY secrets are missing." >&2
             exit 1
           fi
 
