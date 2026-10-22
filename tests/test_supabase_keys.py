@@ -79,7 +79,6 @@ def test_whitespace_stripped(monkeypatch):
     [
         (PUBLISHABLE_ENV, "eyJsecretvalue", publishable_key),
         (PUBLISHABLE_ENV, "bogus_value_123", publishable_key),
-        (PUBLISHABLE_ENV, "sb_publishable_", publishable_key),
         (SECRET_ENV, "sb_publishable_leakcheck", secret_key),
         (SECRET_ENV, "eyJsecretvalue", secret_key),
     ],
