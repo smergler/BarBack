@@ -1,7 +1,7 @@
 """Supabase data layer — thin CRUD wrappers, no business logic.
 
 Every public method carries the user's JWT so Postgres RLS fires.
-Do NOT use the service key for user-scoped reads/writes (see ADR-001).
+Do NOT use the secret key (sb_secret_…) for user-scoped reads/writes (see ADR-001).
 
 Usage:
     db = DB(user_jwt=raw_bearer_token)  # user_jwt is the raw Bearer token, NOT the user_id/sub
@@ -10,11 +10,12 @@ Usage:
 
 from __future__ import annotations
 
-import os
 from datetime import datetime, timezone
 from typing import Any
 
 from supabase import Client, create_client
+
+from backend.supabase_keys import project_url, publishable_key
 
 
 def _make_client(user_jwt: str) -> Client:
@@ -23,9 +24,7 @@ def _make_client(user_jwt: str) -> Client:
     A new client per request is intentional: supabase-py's postgrest
     auth state is not thread-safe to mutate on a shared instance.
     """
-    url = os.environ["SUPABASE_PROJECT_URL"]
-    anon_key = os.environ["SUPABASE_ANON_KEY"]
-    client = create_client(url, anon_key)
+    client = create_client(project_url(), publishable_key())
     client.postgrest.auth(user_jwt)
     return client
 
