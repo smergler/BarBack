@@ -3,7 +3,7 @@
 Run once:
     .venv/bin/python scripts/create_test_users.py
 
-Requires SUPABASE_PROJECT_URL and SUPABASE_PRIVATE_KEY in .env.
+Requires SUPABASE_PROJECT_URL and SUPABASE_SECRET_KEY (sb_secret_…) in .env.
 Writes TEST_USER_A_EMAIL, TEST_USER_A_PASSWORD, TEST_USER_B_EMAIL,
 TEST_USER_B_PASSWORD to .env if they are not already present.
 """
@@ -13,22 +13,26 @@ from __future__ import annotations
 import os
 import secrets
 import string
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dotenv import load_dotenv
 from supabase import create_client
 
-ENV_PATH = Path(__file__).parent.parent / ".env"
+from backend.supabase_keys import SupabaseKeyError, project_url, secret_key
+
+ENV_PATH = Path(os.environ.get("BARBACK_ENV_PATH", Path(__file__).parent.parent / ".env"))
 
 load_dotenv(ENV_PATH)
 
-url = os.environ.get("SUPABASE_PROJECT_URL")
-service_key = os.environ.get("SUPABASE_PRIVATE_KEY")
+try:
+    url, key = project_url(), secret_key()
+except SupabaseKeyError as e:
+    raise SystemExit(str(e))
 
-if not url or not service_key:
-    raise SystemExit("SUPABASE_PROJECT_URL and SUPABASE_PRIVATE_KEY must be set in .env")
-
-sb = create_client(url, service_key)
+sb = create_client(url, key)
 
 # Generate secure passwords
 _chars = string.ascii_letters + string.digits + "!@#$"
