@@ -42,9 +42,11 @@ def test_missing_with_legacy_names_legacy_var(monkeypatch):
         publishable_key()
     assert "SUPABASE_ANON_KEY" in str(ei.value)
     assert PUBLISHABLE_ENV in str(ei.value)
+    assert "eyJlegacy" not in str(ei.value)
     monkeypatch.setenv("SUPABASE_PRIVATE_KEY", "eyJlegacy")
-    with pytest.raises(SupabaseKeyError, match="SUPABASE_PRIVATE_KEY"):
+    with pytest.raises(SupabaseKeyError, match="SUPABASE_PRIVATE_KEY") as ei:
         secret_key()
+    assert "eyJlegacy" not in str(ei.value)
 
 
 def test_jwt_format_rejected(monkeypatch):
@@ -80,6 +82,8 @@ def test_whitespace_stripped(monkeypatch):
         (PUBLISHABLE_ENV, "eyJsecretvalue", publishable_key),
         (PUBLISHABLE_ENV, "bogus_value_123", publishable_key),
         (SECRET_ENV, "sb_publishable_leakcheck", secret_key),
+        (SECRET_ENV, "bogus_value_123", secret_key),
+        (PUBLISHABLE_ENV, "sb_secret_leakcheck", publishable_key),
         (SECRET_ENV, "eyJsecretvalue", secret_key),
     ],
 )
