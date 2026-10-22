@@ -27,18 +27,20 @@ load_dotenv()  # must run before the skipif condition is evaluated
 _REQUIRED = [
     "TEST_USER_A_EMAIL", "TEST_USER_A_PASSWORD",
     "TEST_USER_B_EMAIL", "TEST_USER_B_PASSWORD",
-    "SUPABASE_PROJECT_URL", "SUPABASE_ANON_KEY", "SUPABASE_JWT_TOKEN",
+    "SUPABASE_PROJECT_URL", "SUPABASE_PUBLISHABLE_KEY",
 ]
 
 live_rls = pytest.mark.skipif(
     not all(os.environ.get(k) for k in _REQUIRED),
-    reason="Set TEST_USER_A/B credentials in .env to run RLS isolation tests",
+    reason="Set TEST_USER_A/B credentials and SUPABASE_PUBLISHABLE_KEY in .env to run RLS isolation tests",
 )
 
 
 def _sign_in(email: str, password: str) -> str:
     from supabase import create_client
-    client = create_client(os.environ["SUPABASE_PROJECT_URL"], os.environ["SUPABASE_ANON_KEY"])
+
+    from backend.supabase_keys import project_url, publishable_key
+    client = create_client(project_url(), publishable_key())
     result = client.auth.sign_in_with_password({"email": email, "password": password})
     return result.session.access_token
 
