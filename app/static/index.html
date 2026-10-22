@@ -237,7 +237,8 @@
 
   try {
     const cfg = await fetch('/config').then(r => r.json());
-    sb = supabase.createClient(cfg.supabase_url, cfg.supabase_anon_key);
+    if (!cfg.supabase_url || !cfg.supabase_publishable_key) throw new Error(cfg.detail || 'Supabase config missing');
+    sb = supabase.createClient(cfg.supabase_url, cfg.supabase_publishable_key);
     const { data: { session } } = await sb.auth.getSession();
     if (session) {
       jwt = session.access_token;
