@@ -89,7 +89,7 @@ recommender/       core: schemas, pantry rules, bottle matcher, LLM client, cont
 evals/             fixtures, mock responses, grounding scorer, LLM judge, runner, inspect tool
 tests/             pytest unit tests — scorers, matcher, parser, judge, all API endpoints, RLS
 backend/
-  auth.py          JWT verification (offline, HS256, checks aud + role)
+  auth.py          JWT verification (JWKS, asymmetric only, checks aud + role)
   db.py            thin CRUD wrappers — all 6 tables, 2 RPCs, one new client per request
   routers/         inventory, companions, sessions, session_drinks
 app/
@@ -113,8 +113,8 @@ For live calls, create `.env` at the project root (see `env.template`):
 ```
 ANTHROPIC_API_KEY=sk-ant-...
 SUPABASE_PROJECT_URL=https://...supabase.co
-SUPABASE_ANON_KEY=...
-SUPABASE_JWT_TOKEN=...    # project JWT secret (Settings → API)
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+SUPABASE_SECRET_KEY=sb_secret_...  # scripts only
 ```
 
 ## Run
@@ -159,7 +159,7 @@ would only become a design factor at thousands-of-users scale.
 ## Status
 
 **All Phase 6 (persistence) tasks complete:**
-- Supabase Auth (offline JWT verification, aud + role checks, service_role bypass guard)
+- Supabase Auth (JWKS verification of asymmetric JWTs, aud/iss/role checks, service_role rejected; legacy anon/service_role/HS256 keys not supported)
 - Full CRUD for all 6 tables via supabase-py carrying the user JWT (RLS fires on every query)
 - Sessions + session_drinks with verdict → companion preference feedback (atomic via Postgres RPC)
 - Multi-tab SPA frontend: login, inventory, companions, recommend + verdict buttons
